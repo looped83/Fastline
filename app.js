@@ -29,6 +29,7 @@
     ringLink: document.getElementById('ringLink'),
     ringSecondary: document.getElementById('ringSecondary'),
     ringCaption: document.getElementById('ringCaption'),
+    ringPhases: document.getElementById('ringPhases'),
 
     anchorStartTime: document.getElementById('anchorStartTime'),
     anchorEndTime: document.getElementById('anchorEndTime'),
@@ -100,6 +101,7 @@
      das Fenster eine Stunde länger oder kürzer ist.
      ---------------------------------------------------------------------- */
   let phaseNodes = [];
+  let markerNodes = [];
   let renderedPhases = '';
 
   function phaseSignature(phases) {
@@ -149,12 +151,50 @@
     });
   }
 
+  /* Punkte an den Phasengrenzen auf dem Ring. Der Anteil bezieht sich auf die
+     tatsächliche Fensterlänge, damit sie an Zeitumstellungstagen mitwandern. */
+  function buildRingMarkers(phases, windowHours) {
+    el.ringPhases.textContent = '';
+    markerNodes = phases
+      .filter(function (phase) { return phase.from > 0; })
+      .map(function (phase) {
+        const angle = (phase.from / windowHours * 360 - 90) * (Math.PI / 180);
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', (RING_CENTER + RING_RADIUS * Math.cos(angle)).toFixed(2));
+        dot.setAttribute('cy', (RING_CENTER + RING_RADIUS * Math.sin(angle)).toFixed(2));
+        dot.setAttribute('r', '2.3');
+        dot.setAttribute('class', 'ring__marker');
+        el.ringPhases.append(dot);
+        return { dot: dot, from: phase.from };
+      });
+  }
+
+  function renderMarkers(state) {
+    // Im Essensfenster zeigt der Ring die Zeit bis zum nächsten Fasten –
+    // Phasengrenzen gehören dort nicht hin.
+    el.ringPhases.hidden = !state.isFasting;
+    if (!state.isFasting) return;
+
+    const elapsedHours = state.elapsedMs / Fasting.HOUR;
+    markerNodes.forEach(function (marker) {
+      const className = elapsedHours >= marker.from
+        ? 'ring__marker ring__marker--reached'
+        : 'ring__marker';
+      if (marker.dot.getAttribute('class') !== className) {
+        marker.dot.setAttribute('class', className);
+      }
+    });
+  }
+
   function renderPhases(state) {
-    const signature = phaseSignature(state.phases);
+    const windowHours = state.fastTotalMs / Fasting.HOUR;
+    const signature = phaseSignature(state.phases) + '@' + windowHours.toFixed(3);
     if (signature !== renderedPhases) {
       buildPhaseList(state.phases);
+      buildRingMarkers(state.phases, windowHours);
       renderedPhases = signature;
     }
+    renderMarkers(state);
 
     // Im Essensfenster zeigt die Timeline den kommenden Zyklus.
     const base = state.isFasting ? state.fastStart : state.nextFastStart;

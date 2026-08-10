@@ -138,6 +138,25 @@ const ringGeometry = page => page.evaluate(() => {
     ok(/id="ringHead"[^>]*opacity="0"/.test(markup), 'ringHead muss unsichtbar starten');
   });
 
+  await test('Phasengrenzen sitzen als Punkte auf dem Ring', async function () {
+    const m = await page.evaluate(() => {
+      const kreise = [...document.querySelectorAll('#ringPhases circle')];
+      return {
+        anzahl: kreise.length,
+        erreicht: kreise.filter(c => c.getAttribute('class').includes('reached')).length,
+        aufDerBahn: kreise.every(c => Math.abs(Math.hypot(
+          c.getAttribute('cx') - 100, c.getAttribute('cy') - 100) - 86) < 0.5),
+        versteckt: document.getElementById('ringPhases').hidden
+      };
+    });
+    // 17-Stunden-Fenster, Grenzen bei 3/5/8/10/12/14/16 h
+    equal(m.anzahl, 7, 'Anzahl der Punkte');
+    // 10:42 h gefastet -> 3, 5, 8 und 10 h sind überschritten
+    equal(m.erreicht, 4, 'erreichte Punkte');
+    ok(m.aufDerBahn, 'Punkte liegen nicht auf der Kreisbahn');
+    equal(m.versteckt, false, 'Punkte im Fastenfenster ausgeblendet');
+  });
+
   /* ---- Überschrift ------------------------------------------------------- */
   await test('Überschrift bricht fest nach "Du fastest seit" um', async function () {
     const kopf = await page.evaluate(() => {
@@ -223,6 +242,8 @@ const ringGeometry = page => page.evaluate(() => {
     equal(await page.evaluate(() => document.getElementById('app').dataset.mode), 'eating');
     equal(await page.textContent('#clock'), '12:00 Uhr');
     equal(await page.textContent('#modeAnnounce'), 'Essensfenster ist geöffnet.');
+    equal(await page.evaluate(() => document.getElementById('ringPhases').hidden), true,
+          'Phasenpunkte gehören nicht ins Essensfenster');
   });
 
   await test('Im Hintergrund läuft kein Timer', async function () {

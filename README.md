@@ -11,7 +11,8 @@ Essensfenster von **12:00 bis 19:00** (7 Stunden).
 
 - ob gerade Fasten- oder Essensfenster ist
 - wie lange bereits gefastet wird und wie lange noch
-- den Fortschritt als großer Ring inkl. Prozentwert
+- den Fortschritt als großer Ring inkl. Prozentwert; kleine Punkte auf dem
+  Ring markieren die Phasengrenzen, erreichte hell, kommende gedämpft
 - die aktuelle Fastenphase mit kurzer Erklärung
 - die nächste Phase, in wie vielen Minuten und um wie viel Uhr sie beginnt
 - alle Fastenphasen mit Stundenbereich **und** konkreter Uhrzeit
@@ -22,7 +23,10 @@ Essensfenster von **12:00 bis 19:00** (7 Stunden).
 Die Anzeige rechnet auf jeder vollen Minute neu – häufiger ändert sich nichts,
 da alle Angaben minutengenau sind. Im Hintergrund läuft kein Timer; beim
 Zurückkehren wird sofort neu gerechnet, ein Neuladen ist nie nötig.
-Light- und Dark-Mode folgen automatisch der Systemeinstellung.
+
+Die Oberfläche ist **dauerhaft dunkel** und folgt bewusst nicht der
+Systemeinstellung: so passen Icon, Startbildschirm und App zusammen, und beim
+Blick aufs Handy in der Nacht oder früh am Morgen blendet nichts.
 
 ## Fastenzeiten ändern
 
@@ -57,8 +61,8 @@ installiert die neue Fassung, lädt die Shell frisch und wirft den alten Cache
 weg. Sobald sie übernimmt, lädt die geöffnete Seite sich einmal selbst neu –
 außer während einer laufenden Zeiteingabe.
 
-Im Cache liegen nur die tatsächlich eingebundenen Dateien. Wer auf die hellen
-Icons umstellt, trägt sie in `APP_SHELL` nach, sonst fehlen sie offline.
+Im Cache liegen nur die tatsächlich eingebundenen Dateien. Kommt eine Datei
+hinzu, gehört sie in `APP_SHELL`, sonst fehlt sie offline.
 
 ## Lokal starten
 
@@ -73,37 +77,26 @@ python3 -m http.server 8000
 ## Icons
 
 Der Fortschrittsring als Glaskörper: Kantenlicht, Reflex, weicher Schatten und
-farbiger Lichtschein. **Verwendet wird durchgehend die dunkle Variante** – auf
-dem Homescreen, im Manifest und als Favicon im Browser-Tab, unabhängig vom
-Systemdesign.
-
-Die dunkle Kachel ist bewusst fast flach und neutral gehalten (#232326 nach
-#1A1A1D, ohne Lichtschein und ohne Kachelglanz), damit sie sich zwischen
-iOS-Systemicons einreiht. Die Plastizität kommt allein vom Ring.
+farbiger Lichtschein auf einer fast flachen, neutral dunklen Kachel – damit er
+sich zwischen iOS-Systemicons einreiht.
 
 ```
-verwendet                          Alternative (hell)
-icons/icon-512-dark.png            icons/icon-512.png
-icons/icon-192-dark.png            icons/icon-192.png
-icons/icon-maskable-512-dark.png   icons/icon-maskable-512.png
-icons/apple-touch-icon-dark.png    icons/apple-touch-icon.png
+icons/icon-512-dark.png            icons/icon-maskable-512-dark.png
+icons/icon-192-dark.png            icons/apple-touch-icon-dark.png
+icons/favicon.svg
 ```
 
-Erzeugt werden beide Sätze von [`tools/make-icons.py`](tools/make-icons.py);
-die Paletten stehen als `THEMES` oben in der Datei, ebenso Ringgröße und
-Fortschrittswert.
-
-Auf Hell umstellen heißt: in `index.html` beim `apple-touch-icon` und in
-`manifest.webmanifest` bei den drei `icons`-Einträgen das `-dark` entfernen,
-`background_color` und `theme_color` auf `#F5F5F3` setzen und `favicon.svg`
-auf die hellen Farbwerte ändern.
+Erzeugt werden sie von [`tools/make-icons.py`](tools/make-icons.py)
+(`npm run icons`). Ringgröße, Fortschrittswert und die Paletten stehen oben in
+der Datei. Neben der dunklen liegt dort weiterhin eine helle Palette; gebaut
+wird sie erst, wenn `BUILD` um `"light"` ergänzt wird.
 
 Zwei Eigenheiten, die den Aufbau erklären:
 
 - iOS wendet auf Icons von Web-Apps keine eigenen Glas-Effekte an (das gibt es
   nur für native Icons) – der Look steckt deshalb im Bild selbst.
-- `apple-touch-icon*.png` ist randlos und ohne Transparenz gespeichert, weil
-  iOS transparente Flächen sonst schwarz hinterlegt.
+- `apple-touch-icon-dark.png` ist randlos und ohne Transparenz gespeichert,
+  weil iOS transparente Flächen sonst schwarz hinterlegt.
 
 ## Auf dem Homescreen installieren
 
@@ -154,7 +147,7 @@ Liegt Chromium außerhalb des Playwright-Verzeichnisses, hilft
 | Datei                  | Inhalt                                                        |
 | ---------------------- | ------------------------------------------------------------- |
 | `index.html`           | Grundgerüst der Seite                                          |
-| `styles.css`           | Design, Light/Dark, Responsive-Layout                          |
+| `styles.css`           | Design und Responsive-Layout                                   |
 | `config.js`            | **Fastenzeiten (Voreinstellung) und Phasentexte**              |
 | `settings.js`          | Lokal gespeicherte Zeitanpassungen inkl. Prüfung               |
 | `fasting.js`           | Berechnung des Fastenzustands (ohne DOM, dadurch testbar)      |
@@ -162,7 +155,7 @@ Liegt Chromium außerhalb des Playwright-Verzeichnisses, hilft
 | `sw.js`                | Service Worker für den Offline-Betrieb                         |
 | `manifest.webmanifest` | Web App Manifest für die Installation                          |
 | `tests/`               | Tests der Fastenlogik                                          |
-| `icons/`               | App-Icons im hellen Glas-Look                                  |
+| `icons/`               | App-Icons im dunklen Glas-Look                                 |
 | `tools/make-icons.py`  | Erzeugt die Icons neu (`python3 tools/make-icons.py`, Pillow)  |
 
 ## Fastenphasen

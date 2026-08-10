@@ -1,6 +1,9 @@
-"""Erzeugt die App-Icons im Glas-Look – in einer hellen und einer dunklen Variante.
+"""Erzeugt die App-Icons im Glas-Look.
 
     python3 tools/make-icons.py
+
+Gebaut wird die dunkle Fassung, passend zur dauerhaft dunklen App. Die helle
+Palette bleibt in THEMES erhalten; um sie zu erzeugen, BUILD unten ergänzen.
 
 Benötigt Pillow (pip install pillow). Schreibt nach icons/.
 
@@ -17,6 +20,9 @@ OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
 SS = 4  # Supersampling
 
 PROGRESS = 0.63
+
+# Welche Paletten gebaut werden. Für die helle Fassung: ["dark", "light"].
+BUILD = ["dark"]
 
 THEMES = {
     "light": {
@@ -225,7 +231,7 @@ SPECS = [
     ("icon-maskable-512", 512, 0.262, 0.078, None),
 ]
 
-for theme in THEMES:
+for theme in BUILD:
     for name, size, ring, stroke, radius in SPECS:
         image = make(theme, size, ring, stroke, radius)
         path = os.path.join(OUT, name + THEMES[theme]["suffix"] + ".png")
