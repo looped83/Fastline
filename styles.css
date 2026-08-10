@@ -1,0 +1,573 @@
+/* ============================================================================
+   Intervallfasten – Design
+   Ruhig, typografisch, viel Weißraum. Mobile-first, Light & Dark automatisch.
+   ========================================================================== */
+
+/* ---- Farbwelt ----------------------------------------------------------- */
+:root {
+  color-scheme: light dark;
+
+  --bg: #F5F5F3;
+  --bg-veil: rgba(245, 245, 243, 0.82);
+  --surface: #FFFFFF;
+  --text: #101114;
+  --text-muted: #6A6F77;
+  --text-faint: #9AA0A8;
+  --line: rgba(16, 17, 20, 0.09);
+  --track: rgba(16, 17, 20, 0.08);
+  --card-border: rgba(16, 17, 20, 0.05);
+  --card-shadow: 0 1px 2px rgba(16, 17, 20, 0.04), 0 10px 30px -12px rgba(16, 17, 20, 0.14);
+
+  /* Fastenfenster (Standard) */
+  --accent-from: #4C6FFF;
+  --accent-to: #21C7B6;
+  --accent: #3E6EF0;
+  --accent-soft: rgba(62, 110, 240, 0.09);
+
+  --radius-card: 20px;
+  --radius-inner: 14px;
+
+  --ring-size: min(74vw, 296px);
+  --content-width: 27rem;
+}
+
+/* Essensfenster: warmer Akzent */
+.app[data-mode="eating"] {
+  --accent-from: #F5A524;
+  --accent-to: #EE7B4C;
+  --accent: #D9832A;
+  --accent-soft: rgba(217, 131, 42, 0.11);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0A0B0D;
+    --bg-veil: rgba(10, 11, 13, 0.82);
+    --surface: #16181C;
+    --text: #F2F3F5;
+    --text-muted: #9BA1AA;
+    --text-faint: #71777F;
+    --line: rgba(255, 255, 255, 0.09);
+    --track: rgba(255, 255, 255, 0.09);
+    --card-border: rgba(255, 255, 255, 0.06);
+    --card-shadow: none;
+
+    --accent-from: #6C8CFF;
+    --accent-to: #35DCC8;
+    --accent: #8AA3FF;
+    --accent-soft: rgba(108, 140, 255, 0.13);
+  }
+
+  .app[data-mode="eating"] {
+    --accent-from: #FFBE4D;
+    --accent-to: #FF8F63;
+    --accent: #FFC069;
+    --accent-soft: rgba(255, 190, 77, 0.12);
+  }
+}
+
+/* ---- Grundlagen --------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, p, ol, li {
+  margin: 0;
+  padding: 0;
+}
+
+ol {
+  list-style: none;
+}
+
+.app {
+  min-height: 100svh;
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 1.5rem)
+    calc(env(safe-area-inset-right, 0px) + 1.375rem)
+    calc(env(safe-area-inset-bottom, 0px) + 3rem)
+    calc(env(safe-area-inset-left, 0px) + 1.375rem);
+}
+
+/* ---- Kopfzeile ---------------------------------------------------------- */
+.topbar {
+  max-width: var(--content-width);
+  margin: 0 auto 1.75rem;
+}
+
+.wordmark {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ---- Layout ------------------------------------------------------------- */
+.layout {
+  max-width: var(--content-width);
+  margin: 0 auto;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 2.25rem;
+}
+
+/* ---- Hero --------------------------------------------------------------- */
+.hero {
+  text-align: center;
+}
+
+.hero__status {
+  font-size: clamp(1.5rem, 6.4vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.24;
+  letter-spacing: -0.021em;
+  text-wrap: balance;
+  min-height: 1.24em;
+}
+
+.hero__meta {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hero__clock {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.hero__sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* ---- Fortschrittsring --------------------------------------------------- */
+.ring-wrap {
+  position: relative;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  margin: 2.125rem auto 0;
+}
+
+.ring {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ring__track {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: 11;
+}
+
+.ring__value {
+  fill: none;
+  stroke: url(#ringGradient);
+  stroke-width: 11;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 800ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ring__head {
+  fill: url(#ringGradient);
+  stroke: var(--bg);
+  stroke-width: 3.5;
+  transition:
+    cx 800ms cubic-bezier(0.22, 1, 0.36, 1),
+    cy 800ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 300ms ease;
+}
+
+#ringGradientFrom { stop-color: var(--accent-from); }
+#ringGradientTo   { stop-color: var(--accent-to); }
+
+.ring__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.0625rem;
+  pointer-events: none;
+}
+
+.ring__primary {
+  font-size: clamp(2.5rem, 11.5vw, 3.125rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.ring__link {
+  font-size: 0.8125rem;
+  color: var(--text-faint);
+  margin-top: 0.25rem;
+}
+
+.ring__secondary {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.ring__caption {
+  margin-top: 1.375rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums;
+  min-height: 1.4em;
+}
+
+/* ---- Fastenbeginn / Fastenende ------------------------------------------ */
+.anchors {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.anchor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  text-align: left;
+}
+
+.anchor--end {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.anchor__label {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  letter-spacing: 0.01em;
+}
+
+.anchor__time {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.anchor__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ---- Karten ------------------------------------------------------------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  padding: 1.125rem 1.25rem 1.25rem;
+  box-shadow: var(--card-shadow);
+}
+
+.card__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.5rem;
+}
+
+.card__eyebrow--badge {
+  display: inline-block;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.card__title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  line-height: 1.32;
+}
+
+.card__lead {
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.card__body {
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.card--goal {
+  background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
+  border-color: transparent;
+  color: #FFFFFF;
+  box-shadow: none;
+}
+
+.card--goal .card__title {
+  font-size: 1.125rem;
+}
+
+.card--goal .card__body {
+  color: rgba(255, 255, 255, 0.86);
+  margin-top: 0.3125rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .card--goal {
+    color: #0A0B0D;
+  }
+  .card--goal .card__body {
+    color: rgba(10, 11, 13, 0.72);
+  }
+}
+
+/* ---- Phasen-Timeline ---------------------------------------------------- */
+.phases {
+  margin-top: 1.5rem;
+}
+
+.phases__title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding-left: 0.25rem;
+  margin-bottom: 0.875rem;
+}
+
+.phases__list {
+  position: relative;
+}
+
+.phase {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.375rem 1fr;
+  column-gap: 0.625rem;
+  padding: 0.75rem 0.875rem 0.875rem 0;
+  border-radius: var(--radius-inner);
+}
+
+/* Verbindungslinie zwischen den Punkten */
+.phase::before {
+  content: "";
+  position: absolute;
+  left: 0.6875rem;
+  top: 1.6rem;
+  bottom: -0.25rem;
+  width: 1.5px;
+  background: var(--line);
+  transform: translateX(-50%);
+}
+
+.phase:last-child::before {
+  display: none;
+}
+
+.phase__dot {
+  grid-column: 1;
+  justify-self: center;
+  margin-top: 0.4375rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  position: relative;
+  z-index: 1;
+}
+
+.phase__content {
+  grid-column: 2;
+}
+
+.phase__range {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.phase__name {
+  margin-top: 0.0625rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.011em;
+  line-height: 1.35;
+}
+
+.phase__text {
+  margin-top: 0.1875rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* Zustände */
+.phase--done .phase__dot {
+  background: var(--text-faint);
+  border-color: var(--text-faint);
+  opacity: 0.55;
+}
+
+.phase--done .phase__name,
+.phase--done .phase__range {
+  color: var(--text-faint);
+}
+
+.phase--done .phase__text {
+  color: var(--text-faint);
+}
+
+.phase--upcoming .phase__text {
+  color: var(--text-muted);
+}
+
+.phase--current {
+  background: var(--accent-soft);
+  padding: 0.875rem 1rem 1rem 0;
+  margin: 0.125rem 0;
+}
+
+.phase--current::before {
+  display: none;
+}
+
+.phase--current .phase__dot {
+  margin-top: 0.5rem;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.phase--current .phase__range {
+  color: var(--accent);
+}
+
+.phase--current .phase__name {
+  font-size: 1rem;
+}
+
+.phase--current .phase__text {
+  color: var(--text-muted);
+}
+
+/* ---- Hinweis ------------------------------------------------------------ */
+.disclaimer {
+  margin-top: 1.25rem;
+  padding: 0 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--text-faint);
+}
+
+/* ---- Desktop ------------------------------------------------------------ */
+@media (min-width: 60rem) {
+  :root {
+    --ring-size: 320px;
+    --content-width: 58rem;
+  }
+
+  .app {
+    padding-top: 3.5rem;
+    padding-bottom: 4rem;
+  }
+
+  .topbar {
+    margin-bottom: 2.5rem;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(20rem, 1fr) minmax(21rem, 25rem);
+    gap: 4.5rem;
+    align-items: start;
+  }
+
+  .hero {
+    position: sticky;
+    top: 3.5rem;
+    max-width: 23rem;
+    margin-inline: auto;
+  }
+
+  .stack {
+    margin-top: 0;
+  }
+
+  .phases {
+    margin-top: 1.75rem;
+  }
+}
+
+/* ---- Sanfter Einstieg / Reduced Motion ---------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .app {
+    animation: rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring__value,
+  .ring__head {
+    transition: none;
+  }
+}
