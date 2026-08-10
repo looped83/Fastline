@@ -45,18 +45,14 @@ const FASTING_CONFIG = {
       to: 5,
       title: 'Übergang in den Fastenstoffwechsel',
       description: 'Die Verdauung klingt ab, Blutzucker und Insulin sinken.',
-      detail: 'Die Verdauung klingt ab. Blutzucker und Insulin sinken, der Stoffwechsel ' +
-              'stellt um. Hunger meldet sich jetzt oft entlang deiner gewohnten ' +
-              'Essenszeiten – er kommt in Wellen und geht wieder vorbei.'
+      detail: 'Die Verdauung klingt ab. Blutzucker und Insulin sinken, der Stoffwechsel stellt um.'
     },
     {
       from: 5,
       to: 8,
       title: 'Zuckerspeicher werden genutzt',
       description: 'Die Energie kommt aus dem Glykogen in Leber und Muskulatur.',
-      detail: 'Deine Energie kommt jetzt aus den Zuckerspeichern in Leber und Muskulatur. ' +
-              'Meldet sich Hunger, ist das meist Gewohnheit – die Welle flaut nach ' +
-              'einigen Minuten von selbst ab.'
+      detail: 'Deine Energie kommt jetzt aus den Zuckerspeichern in Leber und Muskulatur.'
     },
     {
       from: 8,
