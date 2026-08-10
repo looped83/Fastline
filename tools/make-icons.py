@@ -1,13 +1,12 @@
-"""Erzeugt die App-Icons im hellen Glas-Look.
+"""Erzeugt die App-Icons im Glas-Look – in einer hellen und einer dunklen Variante.
 
     python3 tools/make-icons.py
 
 Benötigt Pillow (pip install pillow). Schreibt nach icons/.
 
-
 Der Ring wird als Glaskörper aufgebaut: weicher Schlagschatten, farbiger
-Lichtschein dahinter, halbtransparente Füllung, helle Kante oben links,
-weichere Kante unten rechts und ein Reflex quer über die Fläche.
+Lichtschein dahinter, halbtransparente Röhre, Kantenlicht oben links,
+weichere Gegenkante unten rechts und ein Reflex über der Fläche.
 """
 
 from PIL import Image, ImageDraw, ImageFilter, ImageChops
@@ -17,15 +16,52 @@ import os
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "icons")
 SS = 4  # Supersampling
 
-# Helle Grundfläche (oben nach unten)
-BG_TOP = (252, 253, 255)
-BG_BOTTOM = (226, 233, 244)
-
-# Markenfarben
-FROM = (44, 90, 245)
-TO = (0, 182, 172)
-
 PROGRESS = 0.63
+
+THEMES = {
+    "light": {
+        "suffix": "",
+        "bg_top": (252, 253, 255),
+        "bg_bottom": (226, 233, 244),
+        "from": (44, 90, 245),
+        "to": (0, 182, 172),
+        "corner_glow": 90,          # Lichtschein oben links auf der Kachel
+        "shadow_rgb": (32, 42, 60),
+        "shadow_alpha": 0.30,
+        "halo": 0.34,               # farbiger Schein hinter dem Bogen
+        "tube": 0.34,               # ungefüllter Teil des Rings
+        "tube_rgb": (255, 255, 255),
+        "groove_rgb": (120, 135, 160),
+        "groove": 0.22,             # Kontur der Röhre
+        "inner_light": 96,          # Lichtdurchlass in der Farbfläche
+        "rim": 1.00,                # Kantenlicht oben links
+        "rim_soft": 0.24,
+        "sheen": 215,               # Reflex auf dem Glas
+        "sheen_damp": 0.55,         # wie stark der Reflex über der Farbe zurückgeht
+        "plate": 28,                # Glanz über der gesamten Kachel
+    },
+    "dark": {
+        "suffix": "-dark",
+        "bg_top": (40, 45, 55),
+        "bg_bottom": (17, 19, 24),
+        "from": (104, 134, 255),
+        "to": (46, 222, 203),
+        "corner_glow": 34,
+        "shadow_rgb": (0, 0, 0),
+        "shadow_alpha": 0.55,
+        "halo": 0.46,
+        "tube": 0.13,
+        "tube_rgb": (255, 255, 255),
+        "groove_rgb": (0, 0, 0),
+        "groove": 0.34,
+        "inner_light": 58,
+        "rim": 0.82,
+        "rim_soft": 0.18,
+        "sheen": 130,
+        "sheen_damp": 0.62,
+        "plate": 16,
+    },
+}
 
 
 def lerp(a, b, t):
@@ -74,7 +110,15 @@ def edge_mask(mask, offset, blur):
     return ImageChops.multiply(edge, mask)
 
 
-def make(size, ring_ratio, stroke_ratio, corner_radius=None):
+def tinted(size, rgb, mask):
+    """Farbfläche, die nur dort sichtbar ist, wo die Maske Werte hat."""
+    layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    layer.paste(rgb + (255,), mask=mask)
+    return layer
+
+
+def make(theme, size, ring_ratio, stroke_ratio, corner_radius=None):
+    t = THEMES[theme]
     S = size * SS
     cx = cy = S / 2
     r = S * ring_ratio
@@ -85,11 +129,10 @@ def make(size, ring_ratio, stroke_ratio, corner_radius=None):
     img = Image.new("RGB", (S, S))
     draw = ImageDraw.Draw(img)
     for y in range(S):
-        draw.line([(0, y), (S, y)], fill=lerp(BG_TOP, BG_BOTTOM, y / (S - 1)))
+        draw.line([(0, y), (S, y)], fill=lerp(t["bg_top"], t["bg_bottom"], y / (S - 1)))
 
-    # Lichtschein oben links
     glow = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(glow).ellipse([-S * 0.35, -S * 0.55, S * 0.85, S * 0.5], fill=90)
+    ImageDraw.Draw(glow).ellipse([-S * 0.35, -S * 0.55, S * 0.85, S * 0.5], fill=t["corner_glow"])
     glow = glow.filter(ImageFilter.GaussianBlur(S * 0.09))
     img = Image.composite(Image.new("RGB", (S, S), (255, 255, 255)), img, glow)
     img = img.convert("RGBA")
@@ -105,32 +148,23 @@ def make(size, ring_ratio, stroke_ratio, corner_radius=None):
     # --- Schatten unter dem Glas -----------------------------------------
     shadow = track.filter(ImageFilter.GaussianBlur(S * 0.022))
     shadow = ImageChops.offset(shadow, 0, int(S * 0.014))
-    shadow = shadow.point(lambda v: int(v * 0.30))
-    img.alpha_composite(Image.merge("RGBA", (
-        Image.new("L", (S, S), 32), Image.new("L", (S, S), 42),
-        Image.new("L", (S, S), 60), shadow)))
+    shadow = shadow.point(lambda v: int(v * t["shadow_alpha"]))
+    img.alpha_composite(tinted(S, t["shadow_rgb"], shadow))
 
     # --- Farbiger Schein hinter dem Bogen --------------------------------
-    halo = arc.filter(ImageFilter.GaussianBlur(S * 0.045)).point(lambda v: int(v * 0.34))
-    tint = gradient_image(S, FROM, TO).convert("RGBA")
+    halo = arc.filter(ImageFilter.GaussianBlur(S * 0.045)).point(lambda v: int(v * t["halo"]))
+    tint = gradient_image(S, t["from"], t["to"]).convert("RGBA")
     tint.putalpha(halo)
     img.alpha_composite(tint)
 
-    # --- Glaskörper: Rest des Rings (die "Röhre") ------------------------
-    tube_alpha = track.point(lambda v: int(v * 0.34))
-    tube = Image.new("RGBA", (S, S), (255, 255, 255, 0))
-    tube.paste((255, 255, 255, 255), mask=tube_alpha)
-    img.alpha_composite(tube)
+    # --- Glaskörper: ungefüllter Teil des Rings ("Röhre") ----------------
+    img.alpha_composite(tinted(S, t["tube_rgb"], track.point(lambda v: int(v * t["tube"]))))
 
-    # zarte Kontur der Röhre
-    outline = edge_mask(track, (int(S * 0.004), int(S * 0.004)), S * 0.002)
-    outline = outline.point(lambda v: int(v * 0.22))
-    shade = Image.new("RGBA", (S, S), (120, 135, 160, 0))
-    shade.putalpha(outline)
-    img.alpha_composite(shade)
+    groove = edge_mask(track, (int(S * 0.004), int(S * 0.004)), S * 0.002)
+    img.alpha_composite(tinted(S, t["groove_rgb"], groove.point(lambda v: int(v * t["groove"]))))
 
     # --- Farbige Füllung --------------------------------------------------
-    fill = gradient_image(S, FROM, TO).convert("RGBA")
+    fill = gradient_image(S, t["from"], t["to"]).convert("RGBA")
     fill.putalpha(arc)
     img.alpha_composite(fill)
 
@@ -138,50 +172,35 @@ def make(size, ring_ratio, stroke_ratio, corner_radius=None):
     inner = Image.new("L", (S, S), 0)
     inner_draw = ImageDraw.Draw(inner)
     for y in range(S):
-        inner_draw.line([(0, y), (S, y)], fill=max(0, int(96 * (1 - y / (S * 0.72)))))
-    inner = ImageChops.multiply(inner, arc)
-    lit = Image.new("RGBA", (S, S), (255, 255, 255, 0))
-    lit.paste((255, 255, 255, 255), mask=inner)
-    img.alpha_composite(lit)
+        inner_draw.line([(0, y), (S, y)],
+                        fill=max(0, int(t["inner_light"] * (1 - y / (S * 0.72)))))
+    img.alpha_composite(tinted(S, (255, 255, 255), ImageChops.multiply(inner, arc)))
 
-    # --- Kantenlicht oben links (auf dem gesamten Ring) -------------------
+    # --- Kantenlicht ------------------------------------------------------
     d = max(1, int(S * 0.0065))
-    top_edge = edge_mask(track, (d, d), S * 0.0016)
-    highlight = Image.new("RGBA", (S, S), (255, 255, 255, 0))
-    highlight.paste((255, 255, 255, 255), mask=top_edge)
-    img.alpha_composite(highlight)
+    top_edge = edge_mask(track, (d, d), S * 0.0016).point(lambda v: int(v * t["rim"]))
+    img.alpha_composite(tinted(S, (255, 255, 255), top_edge))
 
-    # breiterer, weicher Lichtsaum darunter
-    soft_edge = edge_mask(track, (d * 3, d * 3), S * 0.007).point(lambda v: int(v * 0.24))
-    soft = Image.new("RGBA", (S, S), (255, 255, 255, 0))
-    soft.paste((255, 255, 255, 255), mask=soft_edge)
-    img.alpha_composite(soft)
+    soft_edge = edge_mask(track, (d * 3, d * 3), S * 0.007).point(lambda v: int(v * t["rim_soft"]))
+    img.alpha_composite(tinted(S, (255, 255, 255), soft_edge))
 
-    # weichere Gegenkante unten rechts
-    bottom_edge = edge_mask(track, (-d, -d), S * 0.005).point(lambda v: int(v * 0.50))
-    counter = Image.new("RGBA", (S, S), (255, 255, 255, 0))
-    counter.paste((255, 255, 255, 255), mask=bottom_edge)
-    img.alpha_composite(counter)
+    counter_edge = edge_mask(track, (-d, -d), S * 0.005).point(lambda v: int(v * 0.50))
+    img.alpha_composite(tinted(S, (255, 255, 255), counter_edge))
 
     # --- Reflex quer über das Glas ---------------------------------------
     sheen = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(sheen).ellipse(
-        [-S * 0.05, -S * 0.18, S * 0.70, S * 0.30], fill=215)
+    ImageDraw.Draw(sheen).ellipse([-S * 0.05, -S * 0.18, S * 0.70, S * 0.30], fill=t["sheen"])
     sheen = sheen.filter(ImageFilter.GaussianBlur(S * 0.022))
     sheen = ImageChops.multiply(sheen, track)
     # über der Farbe nur ein Hauch, sonst wirkt der Bogen ausgewaschen
-    sheen = ImageChops.multiply(sheen, arc.point(lambda v: 255 - int(v * 0.55)))
-    gloss = Image.new("RGBA", (S, S), (255, 255, 255, 0))
-    gloss.paste((255, 255, 255, 255), mask=sheen)
-    img.alpha_composite(gloss)
+    sheen = ImageChops.multiply(sheen, arc.point(lambda v: 255 - int(v * t["sheen_damp"])))
+    img.alpha_composite(tinted(S, (255, 255, 255), sheen))
 
     # --- Feiner Glanz auf der gesamten Kachel ----------------------------
     plate = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(plate).ellipse([-S * 0.5, -S * 0.75, S * 1.05, S * 0.28], fill=28)
+    ImageDraw.Draw(plate).ellipse([-S * 0.5, -S * 0.75, S * 1.05, S * 0.28], fill=t["plate"])
     plate = plate.filter(ImageFilter.GaussianBlur(S * 0.06))
-    veil = Image.new("RGBA", (S, S), (255, 255, 255, 0))
-    veil.paste((255, 255, 255, 255), mask=plate)
-    img.alpha_composite(veil)
+    img.alpha_composite(tinted(S, (255, 255, 255), plate))
 
     # --- Ecken ------------------------------------------------------------
     if corner_radius is not None:
@@ -196,21 +215,22 @@ def make(size, ring_ratio, stroke_ratio, corner_radius=None):
 
 
 SPECS = [
-    # name, Größe, Ringradius, Strichstärke, Eckenradius (None = randlos)
-    ("icon-192.png", 192, 0.355, 0.106, 0.22),
-    ("icon-512.png", 512, 0.355, 0.106, 0.22),
-    ("apple-touch-icon.png", 180, 0.355, 0.106, None),
-    ("icon-maskable-512.png", 512, 0.262, 0.078, None),
+    # Name, Größe, Ringradius, Strichstärke, Eckenradius (None = randlos)
+    ("icon-192", 192, 0.355, 0.106, 0.22),
+    ("icon-512", 512, 0.355, 0.106, 0.22),
+    ("apple-touch-icon", 180, 0.355, 0.106, None),
+    ("icon-maskable-512", 512, 0.262, 0.078, None),
 ]
 
-for name, size, ring, stroke, radius in SPECS:
-    image = make(size, ring, stroke, radius)
-    path = os.path.join(OUT, name)
-    if radius is None:
-        # Randlos und deckend – iOS bzw. Android maskiert selbst.
-        base = Image.new("RGB", (size, size), BG_BOTTOM)
-        base.paste(image, (0, 0), image)
-        base.save(path)
-    else:
-        image.save(path)
-    print("geschrieben:", name, size)
+for theme in THEMES:
+    for name, size, ring, stroke, radius in SPECS:
+        image = make(theme, size, ring, stroke, radius)
+        path = os.path.join(OUT, name + THEMES[theme]["suffix"] + ".png")
+        if radius is None:
+            # Randlos und ohne Alphakanal – iOS bzw. Android maskiert selbst.
+            base = Image.new("RGB", (size, size), THEMES[theme]["bg_bottom"])
+            base.paste(image, (0, 0), image)
+            base.save(path)
+        else:
+            image.save(path)
+        print("geschrieben:", os.path.basename(path))

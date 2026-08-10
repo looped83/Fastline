@@ -4,7 +4,7 @@
    offline. Bei der Version unten hochzählen, wenn Dateien geändert wurden.
    ========================================================================== */
 
-const CACHE_NAME = 'intervallfasten-v5';
+const CACHE_NAME = 'intervallfasten-v6';
 
 const APP_SHELL = [
   './',
@@ -19,7 +19,11 @@ const APP_SHELL = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png'
+  './icons/apple-touch-icon.png',
+  './icons/icon-192-dark.png',
+  './icons/icon-512-dark.png',
+  './icons/icon-maskable-512-dark.png',
+  './icons/apple-touch-icon-dark.png'
 ];
 
 self.addEventListener('install', function (event) {

@@ -60,15 +60,38 @@ python3 -m http.server 8000
 
 ## Icons
 
-Die Icons sind im hellen Glas-Look gehalten: heller Verlauf als Grundfläche,
-der Fortschrittsring als Glaskörper mit Kantenlicht, Reflex und weichem
-Schatten. Sie werden von [`tools/make-icons.py`](tools/make-icons.py)
-erzeugt – Farben, Ringgröße und Fortschritt stehen oben in der Datei.
+Der Fortschrittsring als Glaskörper: Kantenlicht, Reflex, weicher Schatten und
+farbiger Lichtschein. Es gibt jede Größe zweimal – hell und dunkel:
 
-iOS wendet auf Homescreen-Icons von Web-Apps keine eigenen Glas-Effekte an
-(das gibt es nur für native Icons); der Look steckt deshalb im Bild selbst.
-`apple-touch-icon.png` ist bewusst randlos und ohne Transparenz gespeichert,
-weil iOS transparente Flächen sonst schwarz hinterlegt.
+```
+icons/icon-512.png          icons/icon-512-dark.png
+icons/icon-192.png          icons/icon-192-dark.png
+icons/icon-maskable-512.png icons/icon-maskable-512-dark.png
+icons/apple-touch-icon.png  icons/apple-touch-icon-dark.png
+```
+
+Erzeugt werden sie von [`tools/make-icons.py`](tools/make-icons.py); beide
+Paletten stehen als `THEMES` oben in der Datei, ebenso Ringgröße und
+Fortschrittswert.
+
+`icons/favicon.svg` enthält beide Paletten in einer Datei und schaltet über
+`prefers-color-scheme` selbst um – das Tab-Symbol passt sich also automatisch
+an.
+
+**Homescreen und Manifest wählen nicht automatisch.** Weder iOS noch das Web
+App Manifest kennen eine Icon-Variante nach Systemdesign; iOS wendet auf
+Icons von Web-Apps auch keine eigenen Glas-Effekte an (das gibt es nur für
+native Icons). Welche Variante dort landet, legen deshalb zwei Stellen fest:
+
+- `index.html`: `<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">`
+- `manifest.webmanifest`: die drei `icons`-Einträge und `background_color` /
+  `theme_color`
+
+Für die dunkle Variante überall `-dark` an den Dateinamen hängen und die
+beiden Farben auf `#0D0F13` setzen.
+
+`apple-touch-icon*.png` ist randlos und ohne Transparenz gespeichert, weil iOS
+transparente Flächen sonst schwarz hinterlegt.
 
 ## Auf dem Homescreen installieren
 
