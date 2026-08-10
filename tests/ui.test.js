@@ -166,8 +166,9 @@ const ringGeometry = page => page.evaluate(() => {
       const mitte = document.querySelector('.ring__center');
       const prozent = document.getElementById('ringCaption');
       const dauer = document.getElementById('anchorTotal');
-      const kinder = [...document.querySelector('.anchors__row').children];
+      const linie = document.querySelector('.anchor__rule');
       const kasten = e => e.getBoundingClientRect();
+      const hoeheMitte = e => kasten(e).top + kasten(e).height / 2;
       return {
         uhrFort: !document.getElementById('clock'),
         modusFort: !document.getElementById('modeLabel'),
@@ -180,7 +181,8 @@ const ringGeometry = page => page.evaluate(() => {
         // liegt waagerecht zwischen den beiden Uhrzeiten
         zwischenZeiten: kasten(dauer).left > kasten(document.getElementById('anchorStartTime')).right &&
                         kasten(dauer).right < kasten(document.getElementById('anchorEndTime')).left,
-        inZeile: kinder.indexOf(dauer) > 0 && kinder.indexOf(dauer) < kinder.length - 1
+        // sitzt auf den Linien links und rechts, nicht darüber
+        versatzZurLinie: Math.abs(hoeheMitte(dauer) - hoeheMitte(linie))
       };
     });
     ok(a.uhrFort, 'Uhrzeit steht noch da');
@@ -190,7 +192,9 @@ const ringGeometry = page => page.evaluate(() => {
     ok(a.prozentInMitte, 'Prozent steht nicht in der Ringmitte');
     ok(a.unterZahl, 'Prozent steht nicht unter der großen Zahl');
     equal(a.dauerText, '17:00 h', 'Fastendauer');
-    ok(a.inZeile && a.zwischenZeiten, 'Dauer steht nicht zwischen den beiden Uhrzeiten');
+    ok(a.zwischenZeiten, 'Dauer steht nicht zwischen den beiden Uhrzeiten');
+    ok(a.versatzZurLinie < 1,
+       'Dauer liegt ' + a.versatzZurLinie.toFixed(1) + ' px neben den Linien');
   });
 
   await test('Die Seite lässt sich nicht zoomen', async function () {
