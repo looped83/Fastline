@@ -4,13 +4,14 @@
    offline. Bei der Version unten hochzählen, wenn Dateien geändert wurden.
    ========================================================================== */
 
-const CACHE_NAME = 'intervallfasten-v1';
+const CACHE_NAME = 'intervallfasten-v2';
 
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './config.js',
+  './settings.js',
   './fasting.js',
   './app.js',
   './manifest.webmanifest',

@@ -6,6 +6,7 @@
 const assert = require('assert');
 const CONFIG = require('../config.js');
 const Fasting = require('../fasting.js');
+const Settings = require('../settings.js');
 
 const resolved = Fasting.resolveConfig(CONFIG);
 
@@ -89,10 +90,13 @@ test('11:59 ist noch Fasten, 12:01 bereits Essensfenster', function () {
 test('Phasen werden korrekt zugeordnet', function () {
   const cases = [
     ['2026-08-10 19:30', 0, 'Verdauungsphase'],
-    ['2026-08-10 23:30', 1, 'Übergang in den Fastenstoffwechsel'],
-    ['2026-08-11 03:30', 2, 'Fettstoffwechsel nimmt zu'],
-    ['2026-08-11 07:30', 3, 'Fortgeschrittene Fastenphase'],
-    ['2026-08-11 11:30', 4, 'Längere Fastenphase']
+    ['2026-08-10 23:00', 1, 'Übergang in den Fastenstoffwechsel'],
+    ['2026-08-11 01:00', 2, 'Zuckerspeicher werden genutzt'],
+    ['2026-08-11 04:00', 3, 'Fettstoffwechsel nimmt zu'],
+    ['2026-08-11 06:00', 4, 'Ketonkörper nehmen zu'],
+    ['2026-08-11 08:00', 5, 'Zelluläre Reinigung (Autophagie)'],
+    ['2026-08-11 10:00', 6, 'Autophagie und Ketose vertiefen sich'],
+    ['2026-08-11 11:30', 7, 'Längere Fastenphase']
   ];
   cases.forEach(function (entry) {
     const state = Fasting.computeState(at(entry[0]), resolved);
@@ -103,8 +107,17 @@ test('Phasen werden korrekt zugeordnet', function () {
 
 test('Nächste Phase und Restzeit stimmen (05:42 -> 1 Stunde 18 Minuten)', function () {
   const state = Fasting.computeState(at('2026-08-11 05:42'), resolved);
-  assert.strictEqual(state.nextPhase.title, 'Fortgeschrittene Fastenphase');
+  assert.strictEqual(state.phase.title, 'Ketonkörper nehmen zu');
+  assert.strictEqual(state.nextPhase.title, 'Zelluläre Reinigung (Autophagie)');
   assert.strictEqual(Fasting.formatDurationWords(state.msToNextPhase, 'ceil'), '1 Stunde 18 Minuten');
+});
+
+test('Autophagie-Phase beginnt 12 Stunden nach Fastenbeginn (07:00 Uhr)', function () {
+  const before = Fasting.computeState(at('2026-08-11 06:59'), resolved);
+  const after = Fasting.computeState(at('2026-08-11 07:01'), resolved);
+  assert.strictEqual(before.phase.title, 'Ketonkörper nehmen zu');
+  assert.strictEqual(after.phase.title, 'Zelluläre Reinigung (Autophagie)');
+  assert.strictEqual(after.phase.from, 12);
 });
 
 test('In der letzten Phase ist das Fastenziel der nächste Meilenstein', function () {
@@ -160,11 +173,51 @@ test('Geänderte Zeiten (16:8) werden samt Phasen übernommen', function () {
   );
   assert.strictEqual(other.fastMinutes, 16 * 60);
   const last = other.phases[other.phases.length - 1];
+  assert.strictEqual(last.title, 'Autophagie und Ketose vertiefen sich');
   assert.strictEqual(last.to, 16);
   const state = Fasting.computeState(at('2026-08-11 11:00'), other);
   assert.strictEqual(state.mode, 'fasting');
   assert.strictEqual(state.percent, 94);
   assert.strictEqual(state.nextPhase, null);
+});
+
+test('Kurzes Fenster (14:10) kürzt die Phasenliste passend', function () {
+  const short = Fasting.resolveConfig(
+    Object.assign({}, CONFIG, { fastStart: '20:00', fastEnd: '10:00' })
+  );
+  assert.strictEqual(short.fastMinutes, 14 * 60);
+  const last = short.phases[short.phases.length - 1];
+  assert.strictEqual(last.title, 'Zelluläre Reinigung (Autophagie)');
+  assert.strictEqual(last.to, 14);
+});
+
+test('Langes Fenster (20:4) nutzt auch die Phasen jenseits von 18 Stunden', function () {
+  const long = Fasting.resolveConfig(
+    Object.assign({}, CONFIG, { fastStart: '16:00', fastEnd: '12:00' })
+  );
+  assert.strictEqual(long.fastMinutes, 20 * 60);
+  const last = long.phases[long.phases.length - 1];
+  assert.strictEqual(last.title, 'Verlängertes Fasten');
+  assert.strictEqual(last.to, 20);
+});
+
+/* ---- Einstellungen ------------------------------------------------------ */
+test('Zeiteingaben werden geprüft', function () {
+  assert.strictEqual(Settings.validate('19:00', '12:00').ok, true);
+  assert.strictEqual(Settings.validate('00:00', '23:59').ok, true);
+  assert.strictEqual(Settings.validate('19:00', '19:00').ok, false);
+  assert.strictEqual(Settings.validate('24:00', '12:00').ok, false);
+  assert.strictEqual(Settings.validate('7:00', '12:00').ok, false);
+  assert.strictEqual(Settings.validate('', '12:00').ok, false);
+  assert.strictEqual(Settings.validate(null, undefined).ok, false);
+});
+
+test('Ohne gespeicherte Änderung gilt die Voreinstellung aus config.js', function () {
+  const loaded = Settings.load(CONFIG);
+  assert.strictEqual(loaded.fastStart, '19:00');
+  assert.strictEqual(loaded.fastEnd, '12:00');
+  assert.strictEqual(loaded.phases.length, CONFIG.phases.length);
+  assert.strictEqual(Settings.isCustomised(), false);
 });
 
 /* ---- Ausgabe ------------------------------------------------------------ */

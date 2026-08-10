@@ -26,6 +26,13 @@
 
     <header class="topbar">
       <h1 class="wordmark">Intervallfasten</h1>
+      <button class="icon-button" id="settingsOpen" type="button" aria-label="Fastenzeiten anpassen">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 8h10M18 8h2M4 16h2M10 16h10"></path>
+          <circle cx="16" cy="8" r="2.4"></circle>
+          <circle cx="8" cy="16" r="2.4"></circle>
+        </svg>
+      </button>
     </header>
 
     <main class="layout">
@@ -91,6 +98,7 @@
         <article class="card card--now">
           <p class="card__eyebrow card__eyebrow--badge">Jetzt</p>
           <h2 class="card__title" id="nowTitle"></h2>
+          <p class="card__meta" id="nowMeta"></p>
           <p class="card__lead" id="nowLead"></p>
           <p class="card__body" id="nowBody"></p>
         </article>
@@ -116,7 +124,46 @@
     </main>
   </div>
 
+  <!-- ===================== Einstellungen ===================== -->
+  <dialog class="sheet" id="settingsDialog" aria-labelledby="settingsTitle">
+    <form class="sheet__form" id="settingsForm" method="dialog">
+      <div class="sheet__head">
+        <h2 class="sheet__title" id="settingsTitle">Fastenzeiten</h2>
+        <button class="icon-button" type="button" id="settingsClose" aria-label="Schließen">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 6l12 12M18 6L6 18"></path>
+          </svg>
+        </button>
+      </div>
+
+      <p class="sheet__hint">
+        Gilt täglich. Die Zeiten bleiben nur auf diesem Gerät gespeichert.
+      </p>
+
+      <div class="field">
+        <label class="field__label" for="inputStart">Fastenbeginn</label>
+        <input class="field__input" type="time" id="inputStart" name="fastStart"
+               step="60" required autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="inputEnd">Fastenende</label>
+        <input class="field__input" type="time" id="inputEnd" name="fastEnd"
+               step="60" required autocomplete="off">
+      </div>
+
+      <p class="sheet__summary" id="settingsSummary" aria-live="polite"></p>
+      <p class="sheet__error" id="settingsError" role="alert" hidden></p>
+
+      <div class="sheet__actions">
+        <button class="button button--ghost" type="button" id="settingsReset">Zurücksetzen</button>
+        <button class="button button--primary" type="submit">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="./config.js"></script>
+  <script src="./settings.js"></script>
   <script src="./fasting.js"></script>
   <script src="./app.js"></script>
 </body>

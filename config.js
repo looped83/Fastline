@@ -12,6 +12,11 @@
    Daraus ergeben sich automatisch:
      Fastendauer   = 19:00 -> 12:00  = 17 Stunden
      Essensfenster = 12:00 -> 19:00  =  7 Stunden
+
+   Diese Werte sind die Voreinstellung. Werden die Zeiten in der App über
+   "Fastenzeiten anpassen" geändert, überschreibt settings.js sie lokal im
+   Browser (localStorage) – die Datei hier bleibt unverändert und dient
+   weiterhin als Ausgangswert bzw. für "Zurücksetzen".
    ========================================================================== */
 
 const FASTING_CONFIG = {
@@ -26,53 +31,96 @@ const FASTING_CONFIG = {
   tickIntervalMs: 1000,
 
   /* ---- Fastenphasen ------------------------------------------------------
-     "from"/"to" sind Stunden seit Fastenbeginn und dienen als grobe
-     Orientierung – keine exakten biologischen Schwellenwerte.
-     Phasen werden automatisch an die konfigurierte Fastendauer angepasst.
+     "from"/"to" sind Stunden seit Fastenbeginn. Die Angaben sind eine grobe
+     Orientierung und keine exakten biologischen Schwellenwerte – der Übergang
+     zwischen den Phasen ist fließend und individuell verschieden.
+
+     Die Liste deckt bis zu 24 Stunden ab und wird automatisch auf die
+     eingestellte Fastendauer gekürzt. Ein 17-Stunden-Fasten endet dadurch
+     mitten in der Phase "Längere Fastenphase", ein 14-Stunden-Fasten in
+     "Zelluläre Reinigung".
      ---------------------------------------------------------------------- */
   phases: [
     {
       from: 0,
-      to: 4,
+      to: 3,
       title: 'Verdauungsphase',
       description:
-        'Der Körper verarbeitet die letzte Mahlzeit und nutzt hauptsächlich die daraus verfügbare Energie.',
+        'Der Körper verarbeitet die letzte Mahlzeit. Blutzucker und Insulin sind typischerweise noch erhöht.',
       detail:
         'Dein Körper ist noch mit der letzten Mahlzeit beschäftigt und nutzt vor allem die daraus verfügbare Energie.'
     },
     {
-      from: 4,
-      to: 8,
+      from: 3,
+      to: 5,
       title: 'Übergang in den Fastenstoffwechsel',
       description:
-        'Insulinspiegel sinken typischerweise und gespeicherte Energie wird zunehmend genutzt.',
+        'Die Verdauung klingt ab, Blutzucker und Insulinspiegel sinken typischerweise wieder.',
       detail:
-        'Der Insulinspiegel sinkt typischerweise und dein Körper greift zunehmend auf gespeicherte Energie zurück.'
+        'Die Verdauung klingt ab. Blutzucker und Insulinspiegel sinken typischerweise – dein Stoffwechsel stellt sich langsam um.'
+    },
+    {
+      from: 5,
+      to: 8,
+      title: 'Zuckerspeicher werden genutzt',
+      description:
+        'Der Körper greift verstärkt auf die gespeicherte Energie in Leber und Muskulatur (Glykogen) zurück.',
+      detail:
+        'Dein Körper deckt seinen Bedarf jetzt vor allem aus den gespeicherten Zuckerreserven (Glykogen).'
     },
     {
       from: 8,
-      to: 12,
+      to: 10,
       title: 'Fettstoffwechsel nimmt zu',
       description:
-        'Der Körper greift zunehmend auf gespeicherte Energiereserven zurück.',
+        'Die Zuckerspeicher leeren sich allmählich, gespeichertes Fett wird zunehmend als Energiequelle genutzt.',
       detail:
-        'Dein Körper befindet sich zunehmend in einem Zustand, in dem gespeicherte Energiereserven genutzt werden.'
+        'Deine Zuckerspeicher leeren sich allmählich. Dein Körper befindet sich zunehmend in einem Zustand, in dem gespeicherte Energiereserven genutzt werden.'
+    },
+    {
+      from: 10,
+      to: 12,
+      title: 'Ketonkörper nehmen zu',
+      description:
+        'Aus Fettsäuren entstehen typischerweise vermehrt Ketonkörper als alternative Energiequelle. Wie ausgeprägt das ist, unterscheidet sich stark.',
+      detail:
+        'Aus Fettsäuren entstehen typischerweise vermehrt Ketonkörper. Manche Menschen nehmen das als klareren Kopf wahr – belegt ist das nicht bei allen.'
     },
     {
       from: 12,
-      to: 16,
-      title: 'Fortgeschrittene Fastenphase',
+      to: 14,
+      title: 'Zelluläre Reinigung (Autophagie)',
       description:
-        'Die Nutzung von Fett als Energiequelle kann weiter zunehmen. Einige mit Fasten verbundene zelluläre Prozesse können stärker aktiviert werden.',
+        'Autophagie beschreibt zelluläre Aufräumprozesse, bei denen Zellen beschädigte Bestandteile abbauen und verwerten. Fasten kann sie verstärken – ab wann und wie stark das beim Menschen geschieht, ist nicht abschließend geklärt.',
       detail:
-        'Die Nutzung von Fett als Energiequelle kann weiter zunehmen. Einige mit dem Fasten verbundene zelluläre Prozesse können stärker aktiviert werden.'
+        'Autophagie – die zelluläre Selbstreinigung – kann in dieser Phase zunehmen. Wie stark, lässt sich von außen nicht messen und ist beim Menschen noch nicht abschließend erforscht.'
+    },
+    {
+      from: 14,
+      to: 16,
+      title: 'Autophagie und Ketose vertiefen sich',
+      description:
+        'Fettverbrennung und zelluläre Reinigungsprozesse können weiter zunehmen. Der Stoffwechsel arbeitet gleichmäßig aus den eigenen Reserven.',
+      detail:
+        'Fettverbrennung und zelluläre Reinigungsprozesse können weiter zunehmen. Dein Stoffwechsel arbeitet gleichmäßig aus den eigenen Reserven.'
     },
     {
       from: 16,
-      to: 17,
+      to: 18,
       title: 'Längere Fastenphase',
-      description: 'Das tägliche Fastenziel ist fast erreicht.',
-      detail: 'Dein tägliches Fastenziel ist fast erreicht – die letzte Etappe läuft.'
+      description:
+        'Der Stoffwechsel ist überwiegend auf Fett als Energiequelle eingestellt. Die letzte Etappe des Fastenfensters läuft.',
+      detail:
+        'Dein Stoffwechsel ist jetzt überwiegend auf Fett als Energiequelle eingestellt. Die letzte Etappe läuft.'
+    },
+    {
+      from: 18,
+      to: 24,
+      title: 'Verlängertes Fasten',
+      description:
+        'Ein deutlich längeres Fastenfenster. Ketose und Autophagie können ausgeprägter sein. Ausreichend trinken und auf das eigene Körpergefühl achten.',
+      detail:
+        'Du bist in einem deutlich längeren Fastenfenster unterwegs. Achte besonders auf ausreichend Flüssigkeit und dein Körpergefühl.'
     }
   ]
 };

@@ -8,9 +8,12 @@
 (function () {
   'use strict';
 
-  const config = Fasting.resolveConfig(FASTING_CONFIG);
   const words = Fasting.formatDurationWords;
   const digits = Fasting.formatDurationDigits;
+  const clock = Fasting.formatClock;
+
+  /* Voreinstellung aus config.js, überschrieben von lokalen Einstellungen. */
+  let config = Fasting.resolveConfig(Settings.load(FASTING_CONFIG));
 
   /* ---- DOM-Referenzen ---------------------------------------------------- */
   const el = {
@@ -36,6 +39,7 @@
     goalBody: document.getElementById('goalBody'),
 
     nowTitle: document.getElementById('nowTitle'),
+    nowMeta: document.getElementById('nowMeta'),
     nowLead: document.getElementById('nowLead'),
     nowBody: document.getElementById('nowBody'),
 
@@ -43,7 +47,17 @@
     nextLead: document.getElementById('nextLead'),
     nextBody: document.getElementById('nextBody'),
 
-    phaseList: document.getElementById('phaseList')
+    phaseList: document.getElementById('phaseList'),
+
+    settingsOpen: document.getElementById('settingsOpen'),
+    settingsClose: document.getElementById('settingsClose'),
+    settingsDialog: document.getElementById('settingsDialog'),
+    settingsForm: document.getElementById('settingsForm'),
+    settingsReset: document.getElementById('settingsReset'),
+    settingsSummary: document.getElementById('settingsSummary'),
+    settingsError: document.getElementById('settingsError'),
+    inputStart: document.getElementById('inputStart'),
+    inputEnd: document.getElementById('inputEnd')
   };
 
   /* Fortschrittsring: Radius 86 im viewBox 200×200, Start oben (12 Uhr). */
@@ -74,40 +88,63 @@
     return format(phase.from) + '–' + format(phase.to) + ' h';
   }
 
-  /* ---- Phasen-Timeline einmalig aufbauen --------------------------------- */
-  const phaseNodes = config.phases.map(function (phase) {
-    const item = document.createElement('li');
-    item.className = 'phase';
+  /** Uhrzeit, zu der eine Phase (bezogen auf einen Fastenbeginn) beginnt/endet. */
+  function phaseClock(base, hours) {
+    return clock(new Date(base.getTime() + hours * Fasting.HOUR));
+  }
 
-    const dot = document.createElement('span');
-    dot.className = 'phase__dot';
+  /* ---- Phasen-Timeline aufbauen ------------------------------------------
+     Wird nach dem Ändern der Fastenzeiten neu erzeugt, weil sich damit auch
+     die Anzahl der Phasen ändern kann.
+     ---------------------------------------------------------------------- */
+  let phaseNodes = [];
 
-    const content = document.createElement('div');
-    content.className = 'phase__content';
+  function buildPhaseList() {
+    el.phaseList.textContent = '';
+    phaseNodes = config.phases.map(function (phase) {
+      const item = document.createElement('li');
+      item.className = 'phase';
 
-    const range = document.createElement('p');
-    range.className = 'phase__range';
-    range.textContent = rangeLabel(phase);
+      const dot = document.createElement('span');
+      dot.className = 'phase__dot';
 
-    const name = document.createElement('h3');
-    name.className = 'phase__name';
-    name.textContent = phase.title;
+      const content = document.createElement('div');
+      content.className = 'phase__content';
 
-    const text = document.createElement('p');
-    text.className = 'phase__text';
-    text.textContent = phase.description;
+      const range = document.createElement('p');
+      range.className = 'phase__range';
 
-    content.append(range, name, text);
-    item.append(dot, content);
-    el.phaseList.append(item);
-    return item;
-  });
+      const hours = document.createElement('span');
+      hours.className = 'phase__hours';
+      hours.textContent = rangeLabel(phase);
 
-  function renderPhaseStates(state) {
+      const times = document.createElement('span');
+      times.className = 'phase__clock';
+
+      const name = document.createElement('h3');
+      name.className = 'phase__name';
+      name.textContent = phase.title;
+
+      const text = document.createElement('p');
+      text.className = 'phase__text';
+      text.textContent = phase.description;
+
+      range.append(hours, times);
+      content.append(range, name, text);
+      item.append(dot, content);
+      el.phaseList.append(item);
+
+      return { item: item, times: times, phase: phase };
+    });
+  }
+
+  function renderPhases(state) {
+    // Im Essensfenster zeigt die Timeline den kommenden Zyklus.
+    const base = state.isFasting ? state.fastStart : state.nextFastStart;
+
     phaseNodes.forEach(function (node, index) {
       let modifier;
       if (!state.isFasting) {
-        // Im Essensfenster ist die Timeline reine Vorschau auf den nächsten Zyklus.
         modifier = 'phase--upcoming';
       } else if (index === state.phaseIndex) {
         modifier = 'phase--current';
@@ -116,12 +153,17 @@
       } else {
         modifier = 'phase--upcoming';
       }
-      const className = 'phase ' + modifier;
-      if (node.className !== className) node.className = className;
 
-      const isCurrent = modifier === 'phase--current';
-      if (isCurrent) node.setAttribute('aria-current', 'step');
-      else node.removeAttribute('aria-current');
+      const className = 'phase ' + modifier;
+      if (node.item.className !== className) node.item.className = className;
+
+      if (modifier === 'phase--current') node.item.setAttribute('aria-current', 'step');
+      else node.item.removeAttribute('aria-current');
+
+      setText(
+        node.times,
+        phaseClock(base, node.phase.from) + '–' + phaseClock(base, node.phase.to) + ' Uhr'
+      );
     });
   }
 
@@ -143,7 +185,7 @@
 
     setText(el.clock, state.clock + ' Uhr');
     renderRing(state.progress);
-    renderPhaseStates(state);
+    renderPhases(state);
 
     if (state.isFasting) renderFasting(state);
     else renderEating(state);
@@ -174,7 +216,8 @@
       setText(el.goalTitle, 'Fastenziel fast erreicht');
       setText(
         el.goalBody,
-        'Noch ' + words(state.remainingMs, 'ceil') + ' bis zu deinen ' + state.fastTotalWords + '.'
+        'Noch ' + words(state.remainingMs, 'ceil') + ' bis zu deinen ' + state.fastTotalWords +
+          ' – um ' + state.fastEndLabel + ' Uhr ist es geschafft.'
       );
     } else {
       el.goalCard.hidden = true;
@@ -183,6 +226,17 @@
     /* Jetzt */
     const phase = state.phase;
     setText(el.nowTitle, phase ? phase.title : 'Fastenfenster');
+    if (phase) {
+      setText(
+        el.nowMeta,
+        'Phase ' + (state.phaseIndex + 1) + ' von ' + config.phases.length + ' · ' +
+          rangeLabel(phase) + ' · ' +
+          phaseClock(state.fastStart, phase.from) + '–' +
+          phaseClock(state.fastStart, phase.to) + ' Uhr'
+      );
+    } else {
+      setText(el.nowMeta, '');
+    }
     setText(el.nowLead, 'Du fastest seit ' + words(state.elapsedMs, 'floor') + '.');
     setText(el.nowBody, phase ? phase.detail : '');
 
@@ -191,14 +245,17 @@
       setText(el.nextTitle, state.nextPhase.title);
       setText(
         el.nextLead,
-        'In ' + words(state.msToNextPhase, 'ceil') + ' erreichst du die nächste Fastenphase.'
+        'In ' + words(state.msToNextPhase, 'ceil') + ', um ' +
+          phaseClock(state.fastStart, state.nextPhase.from) +
+          ' Uhr, erreichst du die nächste Fastenphase.'
       );
       setText(el.nextBody, state.nextPhase.description);
     } else {
       setText(el.nextTitle, 'Fastenziel: ' + state.fastTotalWords);
       setText(
         el.nextLead,
-        'In ' + words(state.remainingMs, 'ceil') + ' hast du dein Fastenziel erreicht.'
+        'In ' + words(state.remainingMs, 'ceil') + ', um ' + state.fastEndLabel +
+          ' Uhr, hast du dein Fastenziel erreicht.'
       );
       setText(
         el.nextBody,
@@ -238,6 +295,11 @@
 
     /* Jetzt */
     setText(el.nowTitle, 'Essensfenster');
+    setText(
+      el.nowMeta,
+      state.fastEndLabel + '–' + state.nextFastStartLabel + ' Uhr · ' +
+        words(state.eatingTotalMs, 'floor')
+    );
     setText(el.nowLead, 'Geöffnet seit ' + words(state.eatingElapsedMs, 'floor') + '.');
     setText(
       el.nowBody,
@@ -254,6 +316,87 @@
         state.fastEndLabel + ' Uhr.'
     );
   }
+
+  /* ---- Einstellungen ------------------------------------------------------
+     Öffnet das Sheet, prüft die Eingaben und übernimmt sie ohne Neuladen.
+     ---------------------------------------------------------------------- */
+  function applyConfig(values) {
+    config = Fasting.resolveConfig(values);
+    buildPhaseList();
+    tick();
+  }
+
+  function updateSummary() {
+    const start = el.inputStart.value;
+    const end = el.inputEnd.value;
+    const check = Settings.validate(start, end);
+
+    if (!check.ok) {
+      setText(el.settingsSummary, '');
+      return;
+    }
+
+    const preview = Fasting.resolveConfig({ fastStart: start, fastEnd: end, phases: [] });
+    setText(
+      el.settingsSummary,
+      'Fastendauer ' + words(preview.fastMs, 'floor') +
+        ' · Essensfenster ' + words(preview.eatMs, 'floor')
+    );
+    showError('');
+  }
+
+  function showError(message) {
+    setText(el.settingsError, message);
+    el.settingsError.hidden = !message;
+  }
+
+  function openSettings() {
+    el.inputStart.value = config.fastStartLabel;
+    el.inputEnd.value = config.fastEndLabel;
+    showError('');
+    updateSummary();
+
+    if (typeof el.settingsDialog.showModal === 'function') el.settingsDialog.showModal();
+    else el.settingsDialog.setAttribute('open', '');
+  }
+
+  function closeSettings() {
+    if (typeof el.settingsDialog.close === 'function') el.settingsDialog.close();
+    else el.settingsDialog.removeAttribute('open');
+  }
+
+  el.settingsOpen.addEventListener('click', openSettings);
+  el.settingsClose.addEventListener('click', closeSettings);
+
+  // Tippen neben dem Sheet schließt es (Klicks auf den Backdrop treffen den Dialog selbst).
+  el.settingsDialog.addEventListener('click', function (event) {
+    if (event.target === el.settingsDialog) closeSettings();
+  });
+  el.inputStart.addEventListener('input', updateSummary);
+  el.inputEnd.addEventListener('input', updateSummary);
+
+  el.settingsForm.addEventListener('submit', function (event) {
+    const values = { fastStart: el.inputStart.value, fastEnd: el.inputEnd.value };
+    const result = Settings.save(values);
+
+    if (!result.ok) {
+      event.preventDefault(); // Sheet bleibt offen, Hinweis wird angezeigt
+      showError(result.message);
+      return;
+    }
+
+    applyConfig(Settings.load(FASTING_CONFIG));
+    // method="dialog" schließt das Sheet anschließend selbst.
+  });
+
+  el.settingsReset.addEventListener('click', function () {
+    Settings.reset();
+    applyConfig(Settings.load(FASTING_CONFIG));
+    el.inputStart.value = config.fastStartLabel;
+    el.inputEnd.value = config.fastEndLabel;
+    showError('');
+    updateSummary();
+  });
 
   /* ---- Takt --------------------------------------------------------------
      Sekundengenau, aber auf die Sekundengrenze ausgerichtet. Nach Rückkehr
@@ -283,6 +426,7 @@
   window.addEventListener('focus', refreshNow);
   window.addEventListener('pageshow', refreshNow);
 
+  buildPhaseList();
   tick();
 
   /* ---- Service Worker ----------------------------------------------------- */
