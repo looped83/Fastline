@@ -720,16 +720,10 @@ ol {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ring__marker {
-  fill: var(--marker);
-  transition: fill 250ms ease;
-}
-
-.ring__marker--reached {
-  fill: var(--marker-reached);
-}
-
-.ring__head {
+  .ring__marker,
+  .ring__head,
+  .anchor__time,
+  .anchor__icon {
     transition: none;
   }
 }

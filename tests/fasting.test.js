@@ -3,6 +3,12 @@
        node tests/fasting.test.js
    ========================================================================== */
 
+/* Feste Zeitzone, bevor das erste Datum entsteht: Die Prüfungen zur
+   Zeitumstellung setzen mitteleuropäische Zeit voraus und schlugen sonst
+   überall dort fehl, wo die Uhr nicht umgestellt wird (z. B. UTC auf einem
+   Bauserver). Die Oberflächentests fixieren dieselbe Zone. */
+process.env.TZ = 'Europe/Berlin';
+
 const assert = require('assert');
 const CONFIG = require('../config.js');
 const Fasting = require('../fasting.js');
