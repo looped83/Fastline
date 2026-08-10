@@ -8,7 +8,6 @@
   color-scheme: light dark;
 
   --bg: #F5F5F3;
-  --bg-veil: rgba(245, 245, 243, 0.82);
   --surface: #FFFFFF;
   --text: #101114;
   --text-muted: #6A6F77;
@@ -42,7 +41,6 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0A0B0D;
-    --bg-veil: rgba(10, 11, 13, 0.82);
     --surface: #16181C;
     --text: #F2F3F5;
     --text-muted: #9BA1AA;

@@ -93,15 +93,25 @@
     return clock(new Date(base.getTime() + hours * Fasting.HOUR));
   }
 
-  /* ---- Phasen-Timeline aufbauen ------------------------------------------
-     Wird nach dem Ändern der Fastenzeiten neu erzeugt, weil sich damit auch
-     die Anzahl der Phasen ändern kann.
+  /* ---- Phasen-Timeline ----------------------------------------------------
+     Die Liste wird nur dann neu aufgebaut, wenn sie sich tatsächlich ändert –
+     nach geänderten Fastenzeiten oder an Tagen mit Zeitumstellung, an denen
+     das Fenster eine Stunde länger oder kürzer ist.
      ---------------------------------------------------------------------- */
   let phaseNodes = [];
+  let renderedPhases = '';
 
-  function buildPhaseList() {
+  function phaseSignature(phases) {
+    return phases
+      .map(function (phase) {
+        return phase.from + '-' + phase.to + ':' + phase.title;
+      })
+      .join('|');
+  }
+
+  function buildPhaseList(phases) {
     el.phaseList.textContent = '';
-    phaseNodes = config.phases.map(function (phase) {
+    phaseNodes = phases.map(function (phase) {
       const item = document.createElement('li');
       item.className = 'phase';
 
@@ -139,6 +149,12 @@
   }
 
   function renderPhases(state) {
+    const signature = phaseSignature(state.phases);
+    if (signature !== renderedPhases) {
+      buildPhaseList(state.phases);
+      renderedPhases = signature;
+    }
+
     // Im Essensfenster zeigt die Timeline den kommenden Zyklus.
     const base = state.isFasting ? state.fastStart : state.nextFastStart;
 
@@ -237,7 +253,7 @@
     if (phase) {
       setText(
         el.nowMeta,
-        'Phase ' + (state.phaseIndex + 1) + ' von ' + config.phases.length + ' · ' +
+        'Phase ' + (state.phaseIndex + 1) + ' von ' + state.phases.length + ' · ' +
           rangeLabel(phase) + ' · ' +
           phaseClock(state.fastStart, phase.from) + '–' +
           phaseClock(state.fastStart, phase.to) + ' Uhr'
@@ -330,8 +346,7 @@
 
   function applyConfig(values) {
     config = Fasting.resolveConfig(values);
-    buildPhaseList();
-    tick();
+    tick();   // renderPhases baut die Timeline bei Bedarf selbst neu auf
   }
 
   function showError(message) {
@@ -455,10 +470,14 @@
   });
 
   /* ---- Takt --------------------------------------------------------------
-     Sekundengenau, aber auf die Sekundengrenze ausgerichtet. Nach Rückkehr
-     aus dem Hintergrund wird sofort neu berechnet, damit die Anzeige nie
-     veraltet ist.
+     Die Anzeige kennt keine Sekunden: Uhrzeit, Dauern und Phasenwechsel
+     ändern sich ausschließlich auf vollen Minuten. Deshalb wird auch nur
+     dann gerechnet – einmal pro Minute statt sechzigmal.
+
+     Im Hintergrund läuft gar kein Timer. Beim Zurückkehren wird sofort neu
+     gerechnet, die Anzeige ist damit nie veraltet.
      ---------------------------------------------------------------------- */
+  const MINUTE_MS = 60 * 1000;
   let timer = null;
 
   function tick() {
@@ -467,22 +486,30 @@
   }
 
   function schedule() {
-    clearTimeout(timer);
-    const interval = config.raw.tickIntervalMs || 1000;
-    const drift = Date.now() % interval;
-    timer = setTimeout(tick, interval - drift);
-  }
-
-  function refreshNow() {
+    stop();
     if (document.visibilityState === 'hidden') return;
-    tick();
+
+    // Etwas Zuschlag, damit der Wecker sicher in der neuen Minute landet
+    // und nicht kurz davor ein zweites Mal für dieselbe Minute anspringt.
+    const untilNextMinute = MINUTE_MS - (Date.now() % MINUTE_MS) + 50;
+    timer = setTimeout(tick, untilNextMinute);
   }
 
-  document.addEventListener('visibilitychange', refreshNow);
-  window.addEventListener('focus', refreshNow);
-  window.addEventListener('pageshow', refreshNow);
+  function stop() {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  }
 
-  buildPhaseList();
+  function onVisibilityChange() {
+    if (document.visibilityState === 'hidden') stop();
+    else tick();
+  }
+
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('pageshow', tick);
+
   tick();
 
   /* ---- Service Worker ----------------------------------------------------- */

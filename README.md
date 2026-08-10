@@ -19,8 +19,9 @@ Essensfenster von **12:00 bis 19:00** (7 Stunden).
 - Fastenbeginn und Fastenende
 - im Essensfenster: wann das nächste Fasten beginnt
 
-Die Anzeige aktualisiert sich sekündlich selbst und rechnet nach Rückkehr aus
-dem Hintergrund sofort neu – ein Neuladen ist nie nötig.
+Die Anzeige rechnet auf jeder vollen Minute neu – häufiger ändert sich nichts,
+da alle Angaben minutengenau sind. Im Hintergrund läuft kein Timer; beim
+Zurückkehren wird sofort neu gerechnet, ein Neuladen ist nie nötig.
 Light- und Dark-Mode folgen automatisch der Systemeinstellung.
 
 ## Fastenzeiten ändern
@@ -44,9 +45,16 @@ const FASTING_CONFIG = {
 ```
 
 Fastendauer und Essensfenster werden daraus automatisch berechnet, die
-Fastenphasen passen sich an die neue Dauer an. Bei geänderten Dateien die
-Version in [`sw.js`](sw.js) (`CACHE_NAME`) hochzählen, damit der Service Worker
-den alten Stand ersetzt.
+Fastenphasen passen sich an die neue Dauer an.
+
+## Änderungen ausliefern
+
+Der Service Worker cacht die App-Shell bei der Installation einmal vollständig
+und liefert danach ausschließlich daraus aus – im laufenden Betrieb entsteht
+kein Netzverkehr. Nach dem Ändern von Dateien deshalb `CACHE_NAME` in
+[`sw.js`](sw.js) hochzählen: der Browser prüft `sw.js` bei jedem Aufruf,
+installiert die neue Fassung, lädt die Shell frisch und wirft den alten Cache
+weg. Die neue Fassung erscheint dann beim nächsten Öffnen.
 
 ## Lokal starten
 
@@ -117,6 +125,11 @@ Die Zeit- und Phasenlogik ist ohne Browser prüfbar:
 ```bash
 node tests/fasting.test.js
 ```
+
+Enthalten sind neben Einzelfällen zwei Durchläufe über längere Zeiträume: ein
+Jahr in Sieben-Minuten-Schritten über sechs verschiedene Fastenfenster sowie
+die Tage der Zeitumstellung. Geprüft wird dabei, dass sich Fortschritt, Dauer
+und Phase nie widersprechen.
 
 ## Aufbau
 

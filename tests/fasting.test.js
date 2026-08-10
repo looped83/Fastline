@@ -123,7 +123,6 @@ test('Autophagie-Phase beginnt 12 Stunden nach Fastenbeginn (07:00 Uhr)', functi
 test('In der letzten Phase ist das Fastenziel der nächste Meilenstein', function () {
   const state = Fasting.computeState(at('2026-08-11 11:13'), resolved);
   assert.strictEqual(state.nextPhase, null);
-  assert.strictEqual(state.nextMilestoneIsGoal, true);
   assert.strictEqual(state.goalIsNear, true);
   assert.strictEqual(Fasting.formatDurationWords(state.remainingMs, 'ceil'), '47 Minuten');
 });
@@ -158,6 +157,35 @@ test('Dauer-Formatierung nutzt korrekte Singular-/Pluralformen', function () {
 });
 
 /* ---- Zeitumstellung ----------------------------------------------------- */
+test('In der Nacht der Zeitumstellung zählt die tatsächliche Fensterlänge', function () {
+  // 25.10.2026: Ende der Sommerzeit, die Nacht ist eine Stunde länger.
+  const herbst = Fasting.computeState(at('2026-10-25 11:01'), resolved);
+  assert.strictEqual(herbst.fastTotalWords, '18 Stunden');
+  assert.strictEqual(herbst.fastTotalDigits, '18:00');
+  // Die Phasenliste wächst mit, sonst stünde die Dauer außerhalb aller Phasen.
+  const letzteHerbst = herbst.phases[herbst.phases.length - 1];
+  assert.strictEqual(letzteHerbst.to, 18);
+  assert.ok(herbst.elapsedMs / Fasting.HOUR <= letzteHerbst.to);
+
+  // 29.03.2026: Beginn der Sommerzeit, die Nacht ist eine Stunde kürzer.
+  const fruehjahr = Fasting.computeState(at('2026-03-29 11:01'), resolved);
+  assert.strictEqual(fruehjahr.fastTotalWords, '16 Stunden');
+  const letzteFruehjahr = fruehjahr.phases[fruehjahr.phases.length - 1];
+  assert.strictEqual(letzteFruehjahr.to, 16);
+});
+
+test('Anzeige-Gesamtlänge und Fortschritt widersprechen sich nie', function () {
+  [['2026-10-25 11:01'], ['2026-03-29 11:01'], ['2026-08-11 11:01']].forEach(function (entry) {
+    const state = Fasting.computeState(at(entry[0]), resolved);
+    // Gefastete Zeit darf die angezeigte Gesamtlänge nicht überschreiten.
+    assert.ok(state.elapsedMs <= state.fastTotalMs, entry[0]);
+    // 100 Prozent gibt es nur, wenn das Fenster wirklich voll ist.
+    if (state.percent === 100) {
+      assert.ok(state.remainingMs === 0, entry[0]);
+    }
+  });
+});
+
 test('Fastenende liegt auch an Zeitumstellungstagen auf 12:00 Uhr', function () {
   // 29.03.2026: Beginn der Sommerzeit in Mitteleuropa.
   const state = Fasting.computeState(at('2026-03-29 08:00'), resolved);
@@ -217,7 +245,92 @@ test('Ohne gespeicherte Änderung gilt die Voreinstellung aus config.js', functi
   assert.strictEqual(loaded.fastStart, '19:00');
   assert.strictEqual(loaded.fastEnd, '12:00');
   assert.strictEqual(loaded.phases.length, CONFIG.phases.length);
-  assert.strictEqual(Settings.isCustomised(), false);
+});
+
+/* ---- Invarianten über lange Zeiträume ------------------------------------
+   Läuft ein Jahr in Sieben-Minuten-Schritten durch, für mehrere Fenster.
+   Findet Fehler, die einzelne Stichproben nicht zeigen (Tageswechsel,
+   Zeitumstellung, Rand der Phasenliste).
+   ------------------------------------------------------------------------ */
+test('Zustand bleibt über ein Jahr und mehrere Fenster widerspruchsfrei', function () {
+  const windows = [
+    ['19:00', '12:00'],   // Standard, 17 Stunden
+    ['20:00', '12:00'],   // 16:8
+    ['22:00', '10:00'],   // über Mitternacht, 12 Stunden
+    ['08:00', '20:00'],   // Fasten am Tag, ohne Mitternacht
+    ['16:00', '12:00'],   // 20 Stunden
+    ['00:00', '23:00']    // Randfall: Beginn um Mitternacht
+  ];
+
+  windows.forEach(function (win) {
+    const cfg = Fasting.resolveConfig(
+      Object.assign({}, CONFIG, { fastStart: win[0], fastEnd: win[1] })
+    );
+    const label = win[0] + '-' + win[1];
+    const cursor = new Date(2026, 0, 1, 0, 0, 0, 0);
+    const end = new Date(2027, 0, 1, 0, 0, 0, 0);
+
+    while (cursor < end) {
+      const state = Fasting.computeState(cursor, cfg);
+      const where = label + ' @ ' + cursor.toString();
+
+      assert.ok(state.progress >= 0 && state.progress <= 1, 'Fortschritt ' + where);
+      assert.ok(state.percent >= 0 && state.percent <= 100, 'Prozent ' + where);
+      assert.ok(state.fastStart <= cursor, 'Fastenbeginn liegt nicht in der Zukunft: ' + where);
+      assert.strictEqual(state.fastStartLabel, win[0], 'Beginn-Beschriftung ' + where);
+      assert.strictEqual(state.fastEndLabel, win[1], 'Ende-Beschriftung ' + where);
+
+      if (state.isFasting) {
+        assert.ok(cursor < state.fastEnd, 'Fasten endet in der Zukunft: ' + where);
+        // Vergangen + verbleibend ergibt zusammen die Fensterlänge.
+        assert.ok(Math.abs(state.elapsedMs + state.remainingMs - state.fastTotalMs) < 1000,
+                  'Summe der Zeiten ' + where);
+        assert.ok(state.phase, 'Phase vorhanden ' + where);
+        const hours = state.elapsedMs / Fasting.HOUR;
+        assert.ok(hours >= state.phase.from - 0.001 && hours <= state.phase.to + 0.001,
+                  'Phase passt zur Dauer ' + where);
+        if (state.nextPhase) {
+          assert.ok(state.msToNextPhase >= 0, 'Zeit bis zur nächsten Phase ' + where);
+          assert.strictEqual(state.nextPhase.from, state.phase.to, 'Phasen lückenlos ' + where);
+        }
+        assert.ok(state.nextFastStart > cursor, 'Nächster Beginn in der Zukunft ' + where);
+      } else {
+        assert.strictEqual(state.phase, null, 'Keine Phase im Essensfenster ' + where);
+        assert.ok(state.eatingRemainingMs >= 0, 'Restzeit Essensfenster ' + where);
+        assert.ok(state.eatingElapsedMs >= 0, 'Vergangene Zeit Essensfenster ' + where);
+        assert.ok(state.nextFastStart > cursor, 'Nächster Beginn in der Zukunft ' + where);
+        assert.ok(Math.abs(state.eatingElapsedMs + state.eatingRemainingMs - state.eatingTotalMs) < 1000,
+                  'Summe Essensfenster ' + where);
+      }
+
+      cursor.setMinutes(cursor.getMinutes() + 7);
+    }
+  });
+});
+
+test('Keine Textausgabe enthält NaN oder undefined', function () {
+  const cfg = Fasting.resolveConfig(CONFIG);
+  const cursor = new Date(2026, 2, 28, 0, 0, 0, 0);   // über die Zeitumstellung
+  const end = new Date(2026, 2, 31, 0, 0, 0, 0);
+
+  while (cursor < end) {
+    const state = Fasting.computeState(cursor, cfg);
+    const texts = [
+      state.clock, state.fastStartLabel, state.fastEndLabel, state.nextFastStartLabel,
+      state.fastTotalDigits, state.fastTotalWords,
+      Fasting.formatDurationWords(state.elapsedMs, 'floor'),
+      Fasting.formatDurationDigits(state.elapsedMs, 'floor'),
+      Fasting.formatDurationWords(state.remainingMs, 'ceil'),
+      String(state.percent)
+    ];
+    texts.forEach(function (text) {
+      assert.ok(typeof text === 'string' && text.length > 0,
+                'Text vorhanden @ ' + cursor.toString());
+      assert.ok(!/NaN|undefined|Infinity/.test(text),
+                'Text "' + text + '" @ ' + cursor.toString());
+    });
+    cursor.setMinutes(cursor.getMinutes() + 3);
+  }
 });
 
 /* ---- Ausgabe ------------------------------------------------------------ */

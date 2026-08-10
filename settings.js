@@ -100,19 +100,12 @@ const Settings = (function () {
     }
   }
 
-  /** Wurden die Zeiten gegenüber der Voreinstellung geändert? */
-  function isCustomised() {
-    return Object.keys(readOverrides()).length > 0;
-  }
-
   return {
     STORAGE_KEY: STORAGE_KEY,
-    isValidTime: isValidTime,
     validate: validate,
     load: load,
     save: save,
-    reset: reset,
-    isCustomised: isCustomised
+    reset: reset
   };
 })();
 
