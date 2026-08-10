@@ -13,7 +13,9 @@ Essensfenster von **12:00 bis 19:00** (7 Stunden).
 - wie lange bereits gefastet wird und wie lange noch
 - den Fortschritt als großer Ring inkl. Prozentwert
 - die aktuelle Fastenphase mit kurzer Erklärung
-- die nächste Phase und wann sie erreicht ist
+- die nächste Phase, in wie vielen Minuten und um wie viel Uhr sie beginnt
+- alle Fastenphasen mit Stundenbereich **und** konkreter Uhrzeit
+  (z. B. „12–14 h · 07:00–09:00 Uhr")
 - Fastenbeginn und Fastenende
 - im Essensfenster: wann das nächste Fasten beginnt
 
@@ -23,7 +25,13 @@ Light- und Dark-Mode folgen automatisch der Systemeinstellung.
 
 ## Fastenzeiten ändern
 
-Alle Einstellungen stehen oben in [`config.js`](config.js):
+**In der App:** oben rechts auf das Regler-Symbol tippen, Fastenbeginn und
+Fastenende setzen, speichern. Die Anzeige stellt sich sofort um, die Phasen
+werden auf die neue Dauer zugeschnitten. Gespeichert wird ausschließlich lokal
+im Browser (`localStorage`), „Zurücksetzen" stellt die Voreinstellung wieder
+her.
+
+**Als Voreinstellung im Code** – oben in [`config.js`](config.js):
 
 ```js
 const FASTING_CONFIG = {
@@ -76,15 +84,26 @@ node tests/fasting.test.js
 | ---------------------- | ------------------------------------------------------------- |
 | `index.html`           | Grundgerüst der Seite                                          |
 | `styles.css`           | Design, Light/Dark, Responsive-Layout                          |
-| `config.js`            | **Fastenzeiten und Phasentexte**                               |
+| `config.js`            | **Fastenzeiten (Voreinstellung) und Phasentexte**              |
+| `settings.js`          | Lokal gespeicherte Zeitanpassungen inkl. Prüfung               |
 | `fasting.js`           | Berechnung des Fastenzustands (ohne DOM, dadurch testbar)      |
 | `app.js`               | Verbindung von Logik und Anzeige, Aktualisierungstakt          |
 | `sw.js`                | Service Worker für den Offline-Betrieb                         |
 | `manifest.webmanifest` | Web App Manifest für die Installation                          |
 | `tests/`               | Tests der Fastenlogik                                          |
 
+## Fastenphasen
+
+Die Timeline umfasst neun Phasen von 0 bis 24 Stunden – darunter die
+Autophagie ab etwa 12 Stunden – und wird automatisch auf das eingestellte
+Fastenfenster gekürzt. Bei 17 Stunden endet sie in „Längere Fastenphase",
+bei 14 Stunden in „Zelluläre Reinigung (Autophagie)".
+
 ## Hinweis
 
-Die Angaben zu den Fastenphasen sind eine grobe Orientierung. Was im Körper
-wann passiert, unterscheidet sich individuell. Die App ist ein persönliches
-Hilfsmittel und ersetzt keine medizinische Beratung.
+Die Angaben zu den Fastenphasen sind eine grobe Orientierung, keine exakten
+biologischen Schwellenwerte – die Übergänge sind fließend und individuell
+verschieden. Das gilt besonders für die Autophagie: dass Fasten zelluläre
+Aufräumprozesse verstärken kann, ist beschrieben, ab wann und wie stark das
+beim Menschen geschieht, ist nicht abschließend geklärt. Die App ist ein
+persönliches Hilfsmittel und ersetzt keine medizinische Beratung.
