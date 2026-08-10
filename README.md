@@ -17,7 +17,7 @@ Essensfenster von **12:00 bis 19:00** (7 Stunden).
 - die nächste Phase, in wie vielen Minuten und um wie viel Uhr sie beginnt
 - alle Fastenphasen mit Stundenbereich **und** konkreter Uhrzeit
   (z. B. „12–14 h · 07:00–09:00 Uhr")
-- Fastenbeginn und Fastenende
+- Fastenbeginn und Fastenende, dazwischen die Länge des Fastenfensters
 - im Essensfenster: wann das nächste Fasten beginnt
 
 Die Anzeige rechnet auf jeder vollen Minute neu – häufiger ändert sich nichts,

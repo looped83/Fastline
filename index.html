@@ -2,7 +2,10 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- maximum-scale/user-scalable: kein Zoom. Greift in der installierten App;
+       Safari im normalen Tab lässt Pinch-Zoom aus Gründen der Barrierefreiheit
+       bewusst zu und ignoriert beides. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <title>Intervallfasten</title>
   <meta name="description" content="Ein ruhiges, persönliches Dashboard für das tägliche Intervallfasten – zeigt sofort, wo du in deinem Fastenzyklus stehst.">
 
@@ -38,12 +41,6 @@
           <span class="hero__status-lead" id="statusLead">&nbsp;</span>
           <span class="hero__status-value" id="statusValue"></span>
         </h1>
-        <p class="hero__meta">
-          <span class="hero__clock" id="clock">--:--</span>
-          <span class="hero__sep" aria-hidden="true"></span>
-          <span id="modeLabel"></span>
-        </p>
-
         <div class="ring-wrap">
           <svg class="ring" viewBox="0 0 200 200" role="img" aria-labelledby="ringTitle" aria-describedby="ringCaption">
             <title id="ringTitle">Fortschritt des Fastenfensters</title>
@@ -71,12 +68,9 @@
 
           <div class="ring__center">
             <p class="ring__primary" id="ringPrimary">0:00 h</p>
-            <p class="ring__link" id="ringLink">von</p>
-            <p class="ring__secondary" id="ringSecondary">17:00 h</p>
+            <p class="ring__caption" id="ringCaption">&nbsp;</p>
           </div>
         </div>
-
-        <p class="ring__caption" id="ringCaption">&nbsp;</p>
 
         <!-- Fastenbeginn/-ende sind zugleich die Einstellung:
              Antippen macht die Uhrzeit direkt an Ort und Stelle änderbar. -->
@@ -96,6 +90,12 @@
               <input class="anchor__input" type="time" step="60" id="inputStart"
                      aria-label="Fastenbeginn" autocomplete="off" hidden>
             </div>
+
+            <span class="anchor__rule" aria-hidden="true"></span>
+
+            <!-- Gesamtlänge des eingestellten Fastenfensters, zwischen seinen
+                 beiden Eckpunkten: 19:00 – 17:00 h – 12:00 -->
+            <p class="anchor__total" id="anchorTotal">17:00 h</p>
 
             <span class="anchor__rule" aria-hidden="true"></span>
 

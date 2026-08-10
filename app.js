@@ -20,19 +20,16 @@
     app: document.getElementById('app'),
     statusLead: document.getElementById('statusLead'),
     statusValue: document.getElementById('statusValue'),
-    clock: document.getElementById('clock'),
-    modeLabel: document.getElementById('modeLabel'),
 
     ringValue: document.getElementById('ringValue'),
     ringHead: document.getElementById('ringHead'),
     ringPrimary: document.getElementById('ringPrimary'),
-    ringLink: document.getElementById('ringLink'),
-    ringSecondary: document.getElementById('ringSecondary'),
     ringCaption: document.getElementById('ringCaption'),
     ringPhases: document.getElementById('ringPhases'),
 
     anchorStartTime: document.getElementById('anchorStartTime'),
     anchorEndTime: document.getElementById('anchorEndTime'),
+    anchorTotal: document.getElementById('anchorTotal'),
 
     goalCard: document.getElementById('goalCard'),
     goalTitle: document.getElementById('goalTitle'),
@@ -262,14 +259,16 @@
       );
     }
 
-    setText(el.clock, state.clock + ' Uhr');
     renderRing(state.progress);
     renderPhases(state);
 
     // Die Eckpunkte zeigen immer das eingestellte Fastenfenster – sie sind
-    // zugleich die Bedienelemente dafür.
+    // zugleich die Bedienelemente dafür. Dazwischen steht dessen Länge, in
+    // beiden Modi dieselbe: Die Zeile beschreibt das Fastenfenster, nicht
+    // den gerade laufenden Abschnitt.
     setText(el.anchorStartTime, config.fastStartLabel);
     setText(el.anchorEndTime, config.fastEndLabel);
+    setText(el.anchorTotal, state.fastTotalDigits + ' h');
 
     if (state.isFasting) renderFasting(state);
     else renderEating(state);
@@ -281,12 +280,9 @@
     /* Kopf */
     setText(el.statusLead, 'Du fastest seit');
     setText(el.statusValue, words(state.elapsedMs, 'floor'));
-    setText(el.modeLabel, 'Fasten bis ' + state.fastEndLabel + ' Uhr');
 
     /* Ring */
     setText(el.ringPrimary, digits(state.elapsedMs, 'floor') + ' h');
-    setText(el.ringLink, 'von');
-    setText(el.ringSecondary, state.fastTotalDigits + ' h');
     setText(el.ringCaption, state.percent + ' % geschafft');
 
     /* Fastenziel */
@@ -351,13 +347,12 @@
     /* Kopf */
     setText(el.statusLead, 'Dein Essensfenster');
     setText(el.statusValue, 'ist geöffnet');
-    setText(el.modeLabel, 'Essen bis ' + state.nextFastStartLabel + ' Uhr');
 
-    /* Ring: zählt auf den nächsten Fastenbeginn zu */
+    /* Ring: zählt auf den nächsten Fastenbeginn zu. Die zweite Zeile nennt
+       dessen Uhrzeit – "Noch 7 Stunden" stünde nur in Worten unter derselben
+       Zahl, und sonst steht der nächste Fastenbeginn nirgends mehr. */
     setText(el.ringPrimary, digits(remaining, 'ceil') + ' h');
-    setText(el.ringLink, 'bis');
-    setText(el.ringSecondary, state.nextFastStartLabel + ' Uhr');
-    setText(el.ringCaption, 'Noch ' + words(remaining, 'ceil'));
+    setText(el.ringCaption, 'bis ' + state.nextFastStartLabel + ' Uhr');
 
     /* Fastenziel – abgeschlossen */
     el.goalCard.hidden = false;
