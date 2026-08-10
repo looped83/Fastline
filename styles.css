@@ -29,6 +29,9 @@
   --accent: #8AA3FF;
   --accent-text: #8AA3FF;
   --accent-soft: rgba(108, 140, 255, 0.13);
+  /* Punkte an den Phasengrenzen auf dem Ring */
+  --marker: rgba(255, 255, 255, 0.22);
+  --marker-reached: rgba(255, 255, 255, 0.75);
 
   --radius-card: 20px;
   --radius-inner: 14px;
@@ -189,6 +192,15 @@ ol {
   stroke: url(#ringGradient);
   stroke-width: 11;
   stroke-linecap: round;
+}
+
+.ring__marker {
+  fill: var(--marker);
+  transition: fill 250ms ease;
+}
+
+.ring__marker--reached {
+  fill: var(--marker-reached);
 }
 
 .ring__head {
@@ -708,7 +720,16 @@ ol {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ring__head {
+  .ring__marker {
+  fill: var(--marker);
+  transition: fill 250ms ease;
+}
+
+.ring__marker--reached {
+  fill: var(--marker-reached);
+}
+
+.ring__head {
     transition: none;
   }
 }

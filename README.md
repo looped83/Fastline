@@ -11,7 +11,8 @@ Essensfenster von **12:00 bis 19:00** (7 Stunden).
 
 - ob gerade Fasten- oder Essensfenster ist
 - wie lange bereits gefastet wird und wie lange noch
-- den Fortschritt als großer Ring inkl. Prozentwert
+- den Fortschritt als großer Ring inkl. Prozentwert; kleine Punkte auf dem
+  Ring markieren die Phasengrenzen, erreichte hell, kommende gedämpft
 - die aktuelle Fastenphase mit kurzer Erklärung
 - die nächste Phase, in wie vielen Minuten und um wie viel Uhr sie beginnt
 - alle Fastenphasen mit Stundenbereich **und** konkreter Uhrzeit
