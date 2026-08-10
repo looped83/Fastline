@@ -29,9 +29,7 @@
     ringSecondary: document.getElementById('ringSecondary'),
     ringCaption: document.getElementById('ringCaption'),
 
-    anchorStartLabel: document.getElementById('anchorStartLabel'),
     anchorStartTime: document.getElementById('anchorStartTime'),
-    anchorEndLabel: document.getElementById('anchorEndLabel'),
     anchorEndTime: document.getElementById('anchorEndTime'),
 
     goalCard: document.getElementById('goalCard'),
@@ -49,15 +47,16 @@
 
     phaseList: document.getElementById('phaseList'),
 
-    settingsOpen: document.getElementById('settingsOpen'),
-    settingsClose: document.getElementById('settingsClose'),
-    settingsDialog: document.getElementById('settingsDialog'),
-    settingsForm: document.getElementById('settingsForm'),
-    settingsReset: document.getElementById('settingsReset'),
-    settingsSummary: document.getElementById('settingsSummary'),
-    settingsError: document.getElementById('settingsError'),
+    anchorsBlock: document.getElementById('anchorsBlock'),
+    anchorsEditor: document.getElementById('anchorsEditor'),
+    editStart: document.getElementById('editStart'),
+    editEnd: document.getElementById('editEnd'),
     inputStart: document.getElementById('inputStart'),
-    inputEnd: document.getElementById('inputEnd')
+    inputEnd: document.getElementById('inputEnd'),
+    settingsReset: document.getElementById('settingsReset'),
+    settingsDone: document.getElementById('settingsDone'),
+    settingsSummary: document.getElementById('settingsSummary'),
+    settingsError: document.getElementById('settingsError')
   };
 
   /* Fortschrittsring: Radius 86 im viewBox 200×200, Start oben (12 Uhr). */
@@ -187,6 +186,11 @@
     renderRing(state.progress);
     renderPhases(state);
 
+    // Die Eckpunkte zeigen immer das eingestellte Fastenfenster – sie sind
+    // zugleich die Bedienelemente dafür.
+    setText(el.anchorStartTime, config.fastStartLabel);
+    setText(el.anchorEndTime, config.fastEndLabel);
+
     if (state.isFasting) renderFasting(state);
     else renderEating(state);
 
@@ -203,12 +207,6 @@
     setText(el.ringLink, 'von');
     setText(el.ringSecondary, state.fastTotalDigits + ' h');
     setText(el.ringCaption, state.percent + ' % geschafft');
-
-    /* Eckpunkte */
-    setText(el.anchorStartLabel, 'Fastenbeginn');
-    setText(el.anchorStartTime, state.fastStartLabel);
-    setText(el.anchorEndLabel, 'Fastenende');
-    setText(el.anchorEndTime, state.fastEndLabel);
 
     /* Fastenziel */
     if (state.goalIsNear) {
@@ -278,12 +276,6 @@
     setText(el.ringSecondary, state.nextFastStartLabel + ' Uhr');
     setText(el.ringCaption, 'Noch ' + words(remaining, 'ceil'));
 
-    /* Eckpunkte */
-    setText(el.anchorStartLabel, 'Fasten beendet');
-    setText(el.anchorStartTime, state.fastEndLabel);
-    setText(el.anchorEndLabel, 'Nächstes Fasten');
-    setText(el.anchorEndTime, state.nextFastStartLabel);
-
     /* Fastenziel – abgeschlossen */
     el.goalCard.hidden = false;
     setText(el.goalTitle, 'Fasten abgeschlossen');
@@ -317,32 +309,16 @@
     );
   }
 
-  /* ---- Einstellungen ------------------------------------------------------
-     Öffnet das Sheet, prüft die Eingaben und übernimmt sie ohne Neuladen.
+  /* ---- Fastenzeiten anpassen ---------------------------------------------
+     Kein Overlay: Ein Tippen auf die Uhrzeit unter dem Ring macht beide
+     Eckpunkte direkt an Ort und Stelle änderbar. Änderungen greifen sofort.
      ---------------------------------------------------------------------- */
+  let editing = false;
+
   function applyConfig(values) {
     config = Fasting.resolveConfig(values);
     buildPhaseList();
     tick();
-  }
-
-  function updateSummary() {
-    const start = el.inputStart.value;
-    const end = el.inputEnd.value;
-    const check = Settings.validate(start, end);
-
-    if (!check.ok) {
-      setText(el.settingsSummary, '');
-      return;
-    }
-
-    const preview = Fasting.resolveConfig({ fastStart: start, fastEnd: end, phases: [] });
-    setText(
-      el.settingsSummary,
-      'Fastendauer ' + words(preview.fastMs, 'floor') +
-        ' · Essensfenster ' + words(preview.eatMs, 'floor')
-    );
-    showError('');
   }
 
   function showError(message) {
@@ -350,52 +326,119 @@
     el.settingsError.hidden = !message;
   }
 
-  function openSettings() {
-    el.inputStart.value = config.fastStartLabel;
-    el.inputEnd.value = config.fastEndLabel;
-    showError('');
-    updateSummary();
-
-    if (typeof el.settingsDialog.showModal === 'function') el.settingsDialog.showModal();
-    else el.settingsDialog.setAttribute('open', '');
-  }
-
-  function closeSettings() {
-    if (typeof el.settingsDialog.close === 'function') el.settingsDialog.close();
-    else el.settingsDialog.removeAttribute('open');
-  }
-
-  el.settingsOpen.addEventListener('click', openSettings);
-  el.settingsClose.addEventListener('click', closeSettings);
-
-  // Tippen neben dem Sheet schließt es (Klicks auf den Backdrop treffen den Dialog selbst).
-  el.settingsDialog.addEventListener('click', function (event) {
-    if (event.target === el.settingsDialog) closeSettings();
-  });
-  el.inputStart.addEventListener('input', updateSummary);
-  el.inputEnd.addEventListener('input', updateSummary);
-
-  el.settingsForm.addEventListener('submit', function (event) {
-    const values = { fastStart: el.inputStart.value, fastEnd: el.inputEnd.value };
-    const result = Settings.save(values);
-
-    if (!result.ok) {
-      event.preventDefault(); // Sheet bleibt offen, Hinweis wird angezeigt
-      showError(result.message);
+  function updateSummary() {
+    const check = Settings.validate(el.inputStart.value, el.inputEnd.value);
+    if (!check.ok) {
+      setText(el.settingsSummary, 'Fastendauer –');
       return;
     }
 
+    const preview = Fasting.resolveConfig({
+      fastStart: el.inputStart.value,
+      fastEnd: el.inputEnd.value,
+      phases: []
+    });
+    setText(
+      el.settingsSummary,
+      'Fastendauer ' + words(preview.fastMs, 'floor') +
+        ' · Essensfenster ' + words(preview.eatMs, 'floor')
+    );
+  }
+
+  function fillInputs() {
+    el.inputStart.value = config.fastStartLabel;
+    el.inputEnd.value = config.fastEndLabel;
+    updateSummary();
+  }
+
+  function focusField(which) {
+    const input = which === 'end' ? el.inputEnd : el.inputStart;
+    input.focus();
+    try {
+      // Öffnet auf unterstützenden Browsern direkt die Zeitauswahl.
+      if (typeof input.showPicker === 'function') input.showPicker();
+    } catch (error) {
+      /* z. B. ohne Nutzergeste – dann genügt der Fokus */
+    }
+  }
+
+  function setEditing(on, which) {
+    if (editing !== on) {
+      editing = on;
+      el.anchorsBlock.classList.toggle('anchors--editing', on);
+      el.editStart.hidden = on;
+      el.editEnd.hidden = on;
+      el.inputStart.hidden = !on;
+      el.inputEnd.hidden = !on;
+      el.anchorsEditor.hidden = !on;
+      el.editStart.setAttribute('aria-expanded', String(on));
+      el.editEnd.setAttribute('aria-expanded', String(on));
+
+      if (on) {
+        fillInputs();
+        showError('');
+        document.addEventListener('click', onDocumentClick, true);
+        document.addEventListener('keydown', onDocumentKeydown);
+      } else {
+        showError('');
+        document.removeEventListener('click', onDocumentClick, true);
+        document.removeEventListener('keydown', onDocumentKeydown);
+      }
+    }
+
+    if (on && which) focusField(which);
+  }
+
+  function onDocumentClick(event) {
+    if (!el.anchorsBlock.contains(event.target)) setEditing(false);
+  }
+
+  function onDocumentKeydown(event) {
+    if (event.key === 'Escape') {
+      setEditing(false);
+      el.editStart.focus();
+    }
+  }
+
+  /** Übernimmt die eingegebenen Zeiten, sobald sie gültig sind. */
+  function commitTimes() {
+    updateSummary();
+
+    const values = { fastStart: el.inputStart.value, fastEnd: el.inputEnd.value };
+    const check = Settings.validate(values.fastStart, values.fastEnd);
+    if (!check.ok) {
+      showError(check.message);
+      return;
+    }
+
+    const saved = Settings.save(values);
+    if (!saved.ok) {
+      showError(saved.message);
+      return;
+    }
+
+    showError('');
     applyConfig(Settings.load(FASTING_CONFIG));
-    // method="dialog" schließt das Sheet anschließend selbst.
+  }
+
+  el.editStart.addEventListener('click', function () { setEditing(true, 'start'); });
+  el.editEnd.addEventListener('click', function () { setEditing(true, 'end'); });
+
+  [el.inputStart, el.inputEnd].forEach(function (input) {
+    input.addEventListener('change', commitTimes);
+    input.addEventListener('input', updateSummary);
+  });
+
+  el.settingsDone.addEventListener('click', function () {
+    setEditing(false);
+    el.editStart.focus();
   });
 
   el.settingsReset.addEventListener('click', function () {
     Settings.reset();
     applyConfig(Settings.load(FASTING_CONFIG));
-    el.inputStart.value = config.fastStartLabel;
-    el.inputEnd.value = config.fastEndLabel;
+    fillInputs();
     showError('');
-    updateSummary();
   });
 
   /* ---- Takt --------------------------------------------------------------

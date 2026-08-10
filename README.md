@@ -25,11 +25,13 @@ Light- und Dark-Mode folgen automatisch der Systemeinstellung.
 
 ## Fastenzeiten ändern
 
-**In der App:** oben rechts auf das Regler-Symbol tippen, Fastenbeginn und
-Fastenende setzen, speichern. Die Anzeige stellt sich sofort um, die Phasen
-werden auf die neue Dauer zugeschnitten. Gespeichert wird ausschließlich lokal
-im Browser (`localStorage`), „Zurücksetzen" stellt die Voreinstellung wieder
-her.
+**In der App:** unter dem Ring auf „Fastenbeginn 19:00" oder
+„Fastenende 12:00" tippen – die Uhrzeit wird direkt an Ort und Stelle zum
+Eingabefeld, darunter erscheinen Fastendauer, Essensfenster und
+„Zurücksetzen". Es gibt bewusst kein Overlay und keinen Speichern-Knopf:
+Änderungen greifen sofort. Geschlossen wird über „Fertig", Escape oder einen
+Tipp daneben. Gespeichert wird ausschließlich lokal im Browser
+(`localStorage`).
 
 **Als Voreinstellung im Code** – oben in [`config.js`](config.js):
 
