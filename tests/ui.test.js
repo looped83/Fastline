@@ -160,6 +160,49 @@ const ringGeometry = page => page.evaluate(() => {
     equal(m.versteckt, false, 'Punkte im Fastenfenster ausgeblendet');
   });
 
+  /* ---- Anordnung --------------------------------------------------------- */
+  await test('Uhrzeit und Modus-Zeile sind fort, Dauer und Prozent umgezogen', async function () {
+    const a = await page.evaluate(() => {
+      const mitte = document.querySelector('.ring__center');
+      const prozent = document.getElementById('ringCaption');
+      const dauer = document.getElementById('anchorTotal');
+      const kinder = [...document.querySelector('.anchors__row').children];
+      const kasten = e => e.getBoundingClientRect();
+      return {
+        uhrFort: !document.getElementById('clock'),
+        modusFort: !document.getElementById('modeLabel'),
+        vonFort: !document.getElementById('ringLink'),
+        prozentText: prozent.textContent,
+        prozentInMitte: mitte.contains(prozent),
+        // steht unter der großen Zahl, nicht daneben
+        unterZahl: kasten(prozent).top >= kasten(document.getElementById('ringPrimary')).bottom - 2,
+        dauerText: dauer.textContent,
+        // liegt waagerecht zwischen den beiden Uhrzeiten
+        zwischenZeiten: kasten(dauer).left > kasten(document.getElementById('anchorStartTime')).right &&
+                        kasten(dauer).right < kasten(document.getElementById('anchorEndTime')).left,
+        inZeile: kinder.indexOf(dauer) > 0 && kinder.indexOf(dauer) < kinder.length - 1
+      };
+    });
+    ok(a.uhrFort, 'Uhrzeit steht noch da');
+    ok(a.modusFort, '"Fasten bis …" steht noch da');
+    ok(a.vonFort, '"von" steht noch da');
+    equal(a.prozentText, '63 % geschafft', 'Prozentzeile');
+    ok(a.prozentInMitte, 'Prozent steht nicht in der Ringmitte');
+    ok(a.unterZahl, 'Prozent steht nicht unter der großen Zahl');
+    equal(a.dauerText, '17:00 h', 'Fastendauer');
+    ok(a.inZeile && a.zwischenZeiten, 'Dauer steht nicht zwischen den beiden Uhrzeiten');
+  });
+
+  await test('Die Seite lässt sich nicht zoomen', async function () {
+    const markup = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const viewport = /<meta name="viewport" content="([^"]+)"/.exec(markup)[1];
+    ok(/user-scalable=no/.test(viewport), 'user-scalable fehlt: ' + viewport);
+    ok(/maximum-scale=1\b/.test(viewport), 'maximum-scale fehlt: ' + viewport);
+    // Gegen den Doppeltipp-Zoom, den das Meta allein nicht abschaltet.
+    equal(await page.evaluate(
+      () => getComputedStyle(document.documentElement).touchAction), 'manipulation');
+  });
+
   /* ---- Überschrift ------------------------------------------------------- */
   await test('Überschrift bricht fest nach "Du fastest seit" um', async function () {
     const kopf = await page.evaluate(() => {
@@ -206,13 +249,17 @@ const ringGeometry = page => page.evaluate(() => {
   await test('Gültige Änderung greift sofort und überlebt einen Neustart', async function () {
     await page.fill('#inputEnd', '10:30');
     await page.waitForTimeout(250);
-    equal(await page.textContent('#ringSecondary'), '15:30 h', 'Ringmitte');
+    equal(await page.textContent('#anchorTotal'), '15:30 h', 'Fastendauer');
     const phasen = await page.evaluate(() => document.querySelectorAll('.phase').length);
     equal(phasen, 7, 'Phasenliste passt sich der kürzeren Dauer an');
 
     await page.reload();
     await page.waitForTimeout(300);
     equal(await page.textContent('#anchorEndTime'), '10:30', 'nach Neuladen');
+    // Beim Bearbeiten weicht die Dauer den Eingabefeldern – danach ist sie
+    // wieder da.
+    equal(await page.evaluate(() => getComputedStyle(
+      document.getElementById('anchorTotal')).display !== 'none'), true, 'Dauer wieder sichtbar');
   });
 
   await test('Zurücksetzen stellt die Voreinstellung wieder her', async function () {
@@ -243,8 +290,11 @@ const ringGeometry = page => page.evaluate(() => {
     await page.clock.runFor(100 * 1000); // -> 12:00:00
     await page.waitForTimeout(100);
     equal(await page.evaluate(() => document.getElementById('app').dataset.mode), 'eating');
-    equal(await page.textContent('#clock'), '12:00 Uhr');
     equal(await page.textContent('#modeAnnounce'), 'Essensfenster ist geöffnet.');
+    // Im Essensfenster nennt die zweite Zeile im Kreis den nächsten
+    // Fastenbeginn – sonst stünde er nirgends mehr.
+    equal(await page.textContent('#ringCaption'), 'bis 19:00 Uhr');
+    equal(await page.textContent('#anchorTotal'), '17:00 h', 'Dauer bleibt die des Fastens');
     equal(await page.evaluate(() => getComputedStyle(
       document.getElementById('ringPhases')).display), 'none',
           'Phasenpunkte gehören nicht ins Essensfenster');
