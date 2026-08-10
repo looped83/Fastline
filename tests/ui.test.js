@@ -146,7 +146,10 @@ const ringGeometry = page => page.evaluate(() => {
         erreicht: kreise.filter(c => c.getAttribute('class').includes('reached')).length,
         aufDerBahn: kreise.every(c => Math.abs(Math.hypot(
           c.getAttribute('cx') - 100, c.getAttribute('cy') - 100) - 86) < 0.5),
-        versteckt: document.getElementById('ringPhases').hidden
+        // Gemessen wird, was der Browser zeichnet. Die Eigenschaft ".hidden"
+        // gibt es an SVG-Knoten nicht; sie abzufragen bestätigte nur den
+        // eigenen Schreibzugriff und verdeckte so einen echten Fehler.
+        versteckt: getComputedStyle(document.getElementById('ringPhases')).display === 'none'
       };
     });
     // 17-Stunden-Fenster, Grenzen bei 3/5/8/10/12/14/16 h
@@ -242,7 +245,8 @@ const ringGeometry = page => page.evaluate(() => {
     equal(await page.evaluate(() => document.getElementById('app').dataset.mode), 'eating');
     equal(await page.textContent('#clock'), '12:00 Uhr');
     equal(await page.textContent('#modeAnnounce'), 'Essensfenster ist geöffnet.');
-    equal(await page.evaluate(() => document.getElementById('ringPhases').hidden), true,
+    equal(await page.evaluate(() => getComputedStyle(
+      document.getElementById('ringPhases')).display), 'none',
           'Phasenpunkte gehören nicht ins Essensfenster');
   });
 

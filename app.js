@@ -82,6 +82,14 @@
     if (node && node.getAttribute(name) !== value) node.setAttribute(name, value);
   }
 
+  /* SVG-Elemente kennen die Eigenschaft "hidden" nicht – ein "node.hidden = true"
+     legt dort nur ein wirkungsloses Feld an. Deshalb über das Attribut, auf das
+     die Regel [hidden] in styles.css greift. */
+  function setHidden(node, hidden) {
+    if (hidden) setAttr(node, 'hidden', '');
+    else if (node.hasAttribute('hidden')) node.removeAttribute('hidden');
+  }
+
   /** "0–4 h" bzw. "16–17 h" */
   function rangeLabel(phase) {
     const format = function (value) {
@@ -172,7 +180,7 @@
   function renderMarkers(state) {
     // Im Essensfenster zeigt der Ring die Zeit bis zum nächsten Fasten –
     // Phasengrenzen gehören dort nicht hin.
-    el.ringPhases.hidden = !state.isFasting;
+    setHidden(el.ringPhases, !state.isFasting);
     if (!state.isFasting) return;
 
     const elapsedHours = state.elapsedMs / Fasting.HOUR;
