@@ -61,43 +61,42 @@ python3 -m http.server 8000
 ## Icons
 
 Der Fortschrittsring als Glaskörper: Kantenlicht, Reflex, weicher Schatten und
-farbiger Lichtschein. Es gibt jede Größe zweimal – hell und dunkel:
+farbiger Lichtschein. **Verwendet wird durchgehend die dunkle Variante** – auf
+dem Homescreen, im Manifest und als Favicon im Browser-Tab, unabhängig vom
+Systemdesign.
 
 ```
-icons/icon-512.png          icons/icon-512-dark.png
-icons/icon-192.png          icons/icon-192-dark.png
-icons/icon-maskable-512.png icons/icon-maskable-512-dark.png
-icons/apple-touch-icon.png  icons/apple-touch-icon-dark.png
+verwendet                          Alternative (hell)
+icons/icon-512-dark.png            icons/icon-512.png
+icons/icon-192-dark.png            icons/icon-192.png
+icons/icon-maskable-512-dark.png   icons/icon-maskable-512.png
+icons/apple-touch-icon-dark.png    icons/apple-touch-icon.png
 ```
 
-Erzeugt werden sie von [`tools/make-icons.py`](tools/make-icons.py); beide
-Paletten stehen als `THEMES` oben in der Datei, ebenso Ringgröße und
+Erzeugt werden beide Sätze von [`tools/make-icons.py`](tools/make-icons.py);
+die Paletten stehen als `THEMES` oben in der Datei, ebenso Ringgröße und
 Fortschrittswert.
 
-`icons/favicon.svg` enthält beide Paletten in einer Datei und schaltet über
-`prefers-color-scheme` selbst um – das Tab-Symbol passt sich also automatisch
-an.
+Auf Hell umstellen heißt: in `index.html` beim `apple-touch-icon` und in
+`manifest.webmanifest` bei den drei `icons`-Einträgen das `-dark` entfernen,
+`background_color` und `theme_color` auf `#F5F5F3` setzen und `favicon.svg`
+auf die hellen Farbwerte ändern.
 
-**Homescreen und Manifest wählen nicht automatisch.** Weder iOS noch das Web
-App Manifest kennen eine Icon-Variante nach Systemdesign; iOS wendet auf
-Icons von Web-Apps auch keine eigenen Glas-Effekte an (das gibt es nur für
-native Icons). Welche Variante dort landet, legen deshalb zwei Stellen fest:
+Zwei Eigenheiten, die den Aufbau erklären:
 
-- `index.html`: `<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">`
-- `manifest.webmanifest`: die drei `icons`-Einträge und `background_color` /
-  `theme_color`
-
-Für die dunkle Variante überall `-dark` an den Dateinamen hängen und die
-beiden Farben auf `#0D0F13` setzen.
-
-`apple-touch-icon*.png` ist randlos und ohne Transparenz gespeichert, weil iOS
-transparente Flächen sonst schwarz hinterlegt.
+- iOS wendet auf Icons von Web-Apps keine eigenen Glas-Effekte an (das gibt es
+  nur für native Icons) – der Look steckt deshalb im Bild selbst.
+- `apple-touch-icon*.png` ist randlos und ohne Transparenz gespeichert, weil
+  iOS transparente Flächen sonst schwarz hinterlegt.
 
 ## Auf dem Homescreen installieren
 
 - **iOS/Safari:** Teilen → „Zum Home-Bildschirm“
 - **Android/Chrome:** Menü → „App installieren“
 - **Desktop-Chrome/Edge:** Installationssymbol in der Adressleiste
+
+iOS merkt sich das Homescreen-Icon dauerhaft. Nach einem Icon-Wechsel muss die
+App einmal vom Homescreen gelöscht und neu abgelegt werden.
 
 Nach dem ersten Laden funktioniert die App auch offline.
 
