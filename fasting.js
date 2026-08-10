@@ -84,9 +84,20 @@ const Fasting = (function () {
 
   /* ---- Konfiguration aufbereiten ---------------------------------------- */
 
+  /** Schneidet die Phasenliste auf ein Fenster von "hours" Stunden zu. */
+  function clampPhases(phases, hours) {
+    return phases
+      .filter(function (phase) {
+        return phase.from < hours;
+      })
+      .map(function (phase) {
+        return Object.assign({}, phase, { to: Math.min(phase.to, hours) });
+      });
+  }
+
   /**
    * Leitet aus der Konfiguration die abgeleiteten Werte ab und passt die
-   * Phasen an die tatsächliche Fastendauer an (falls die Zeiten geändert
+   * Phasen an die eingestellte Fastendauer an (falls die Zeiten geändert
    * werden, bleibt die Timeline dadurch konsistent).
    */
   function resolveConfig(config) {
@@ -97,14 +108,6 @@ const Fasting = (function () {
     if (fastMinutes === 0) fastMinutes = 1440; // Sonderfall: durchgehendes Fasten
     const eatMinutes = 1440 - fastMinutes;
     const fastHours = fastMinutes / 60;
-
-    const phases = (config.phases || [])
-      .filter(function (phase) {
-        return phase.from < fastHours;
-      })
-      .map(function (phase) {
-        return Object.assign({}, phase, { to: Math.min(phase.to, fastHours) });
-      });
 
     return {
       raw: config,
@@ -117,7 +120,10 @@ const Fasting = (function () {
       fastStartLabel: pad2(Math.floor(startMinutes / 60)) + ':' + pad2(startMinutes % 60),
       fastEndLabel: pad2(Math.floor(endMinutes / 60)) + ':' + pad2(endMinutes % 60),
       goalSoonMs: (config.goalSoonMinutes != null ? config.goalSoonMinutes : 60) * MINUTE,
-      phases: phases
+      phases: clampPhases(config.phases || [], fastHours),
+      // Ungekürzt, damit an Tagen mit Zeitumstellung auch auf ein längeres
+      // Fenster zugeschnitten werden kann.
+      allPhases: config.phases || []
     };
   }
 
@@ -140,6 +146,16 @@ const Fasting = (function () {
 
     const isFasting = now < fastEnd;
 
+    /* An Tagen mit Zeitumstellung ist das Fenster tatsächlich eine Stunde
+       länger oder kürzer als die Uhrzeiten vermuten lassen. Angezeigt wird
+       die echte Länge – sonst stünde dort z. B. "17:01 h von 17:00 h". */
+    const fastTotalMs = fastEnd - fastStart;
+    const windowHours = fastTotalMs / HOUR;
+    const nominalHours = resolved.fastMinutes / 60;
+    const phases = Math.abs(windowHours - nominalHours) < 0.001
+      ? resolved.phases
+      : clampPhases(resolved.allPhases, windowHours);
+
     const state = {
       now: now,
       clock: formatClock(now),
@@ -149,9 +165,10 @@ const Fasting = (function () {
       fastEnd: fastEnd,
       fastStartLabel: resolved.fastStartLabel,
       fastEndLabel: resolved.fastEndLabel,
-      fastTotalMs: fastEnd - fastStart,
-      fastTotalDigits: formatDurationDigits(resolved.fastMs, 'floor'),
-      fastTotalWords: formatDurationWords(resolved.fastMs, 'floor')
+      fastTotalMs: fastTotalMs,
+      fastTotalDigits: formatDurationDigits(fastTotalMs, 'floor'),
+      fastTotalWords: formatDurationWords(fastTotalMs, 'floor'),
+      phases: isFasting ? phases : resolved.phases
     };
 
     if (isFasting) {
@@ -165,18 +182,16 @@ const Fasting = (function () {
       state.percent = formatPercent(progress);
       state.goalIsNear = remainingMs <= resolved.goalSoonMs;
 
-      // Das Essensfenster, das nach diesem Fasten folgt.
-      const eatingEnd = dateAt(
+      // Beginn des Fastens, das auf das folgende Essensfenster wartet.
+      const nextFastStart = dateAt(
         fastEnd,
         resolved.startMinutes,
         resolved.startMinutes > resolved.endMinutes ? 0 : 1
       );
-      state.eatingStart = fastEnd;
-      state.eatingEnd = eatingEnd;
-      state.nextFastStart = eatingEnd;
-      state.nextFastStartLabel = formatClock(eatingEnd);
+      state.nextFastStart = nextFastStart;
+      state.nextFastStartLabel = formatClock(nextFastStart);
 
-      Object.assign(state, resolvePhase(elapsedMs, remainingMs, resolved));
+      Object.assign(state, resolvePhase(elapsedMs, phases));
     } else {
       // Essensfenster: von fastEnd bis zum nächsten Fastenbeginn.
       const eatingStart = fastEnd;
@@ -184,8 +199,6 @@ const Fasting = (function () {
         ? dateAt(now, resolved.startMinutes, 0)
         : dateAt(now, resolved.startMinutes, 1);
 
-      state.eatingStart = eatingStart;
-      state.eatingEnd = nextFastStart;
       state.nextFastStart = nextFastStart;
       state.nextFastStartLabel = formatClock(nextFastStart);
       state.eatingElapsedMs = Math.max(0, now - eatingStart);
@@ -206,16 +219,13 @@ const Fasting = (function () {
   }
 
   /** Aktuelle Phase, nächste Phase und Zeit bis zum nächsten Meilenstein. */
-  function resolvePhase(elapsedMs, remainingMs, resolved) {
-    const phases = resolved.phases;
+  function resolvePhase(elapsedMs, phases) {
     if (!phases.length) {
       return {
         phase: null,
         phaseIndex: -1,
         nextPhase: null,
-        msToNextPhase: null,
-        msToNextMilestone: remainingMs,
-        nextMilestoneIsGoal: true
+        msToNextPhase: null
       };
     }
 
@@ -233,9 +243,7 @@ const Fasting = (function () {
       phase: phase,
       phaseIndex: index,
       nextPhase: nextPhase,
-      msToNextPhase: msToNextPhase,
-      msToNextMilestone: nextPhase ? msToNextPhase : remainingMs,
-      nextMilestoneIsGoal: !nextPhase
+      msToNextPhase: msToNextPhase
     };
   }
 
@@ -253,12 +261,8 @@ const Fasting = (function () {
   }
 
   return {
-    MINUTE: MINUTE,
     HOUR: HOUR,
-    parseTimeToMinutes: parseTimeToMinutes,
-    dateAt: dateAt,
     formatClock: formatClock,
-    splitDuration: splitDuration,
     formatDurationDigits: formatDurationDigits,
     formatDurationWords: formatDurationWords,
     resolveConfig: resolveConfig,

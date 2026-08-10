@@ -1,10 +1,16 @@
 /* ============================================================================
    Service Worker
-   App-Shell wird beim ersten Besuch gecacht – danach funktioniert die App auch
-   offline. Bei der Version unten hochzählen, wenn Dateien geändert wurden.
+   ----------------------------------------------------------------------------
+   Die App-Shell wird bei der Installation einmal vollständig gecacht und
+   danach ausschließlich von dort ausgeliefert. Im laufenden Betrieb entsteht
+   dadurch kein Netzverkehr mehr – die App startet offline wie online sofort.
+
+   Aktualisiert wird über die Version: CACHE_NAME hochzählen, sobald sich
+   Dateien geändert haben. Der Browser prüft sw.js bei jedem Aufruf, installiert
+   die neue Fassung, lädt die Shell frisch und wirft den alten Cache weg.
    ========================================================================== */
 
-const CACHE_NAME = 'intervallfasten-v11';
+const CACHE_NAME = 'intervallfasten-v12';
 
 const APP_SHELL = [
   './',
@@ -28,83 +34,66 @@ const APP_SHELL = [
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then(function (cache) {
-        // addAll bricht komplett ab, wenn eine Datei fehlt – daher einzeln.
-        return Promise.all(
-          APP_SHELL.map(function (url) {
-            return cache.add(new Request(url, { cache: 'reload' })).catch(function () {});
-          })
-        );
-      })
-      .then(function () {
-        return self.skipWaiting();
-      })
+    caches.open(CACHE_NAME).then(function (cache) {
+      // Einzeln statt addAll: eine fehlende Datei soll nicht die ganze
+      // Installation scheitern lassen.
+      return Promise.all(
+        APP_SHELL.map(function (url) {
+          return cache.add(new Request(url, { cache: 'reload' })).catch(function () {});
+        })
+      );
+    }).then(function () {
+      return self.skipWaiting();
+    })
   );
 });
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(
-    caches
-      .keys()
-      .then(function (keys) {
-        return Promise.all(
-          keys.map(function (key) {
-            return key === CACHE_NAME ? null : caches.delete(key);
-          })
-        );
-      })
-      .then(function () {
-        return self.clients.claim();
-      })
+    caches.keys().then(function (keys) {
+      return Promise.all(
+        keys.map(function (key) {
+          return key === CACHE_NAME ? null : caches.delete(key);
+        })
+      );
+    }).then(function () {
+      return self.clients.claim();
+    })
   );
 });
 
 self.addEventListener('fetch', function (event) {
   const request = event.request;
+  const url = new URL(request.url);
 
   if (request.method !== 'GET') return;
-  if (new URL(request.url).origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin) return;
+  // sw.js selbst nie ausliefern, sonst blockiert der Cache seine eigene
+  // Aktualisierung.
+  if (url.pathname.endsWith('/sw.js')) return;
 
-  // Seitenaufrufe: erst Netzwerk (frische Version), sonst Cache.
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then(function (response) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(function (cache) {
-            cache.put('./index.html', copy);
-          });
-          return response;
-        })
-        .catch(function () {
-          return caches.match('./index.html').then(function (cached) {
-            return cached || caches.match('./');
-          });
-        })
-    );
-    return;
-  }
-
-  // Übrige Dateien: sofort aus dem Cache, im Hintergrund aktualisieren.
-  event.respondWith(
-    caches.match(request).then(function (cached) {
-      const network = fetch(request)
-        .then(function (response) {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(function (cache) {
-              cache.put(request, copy);
-            });
-          }
-          return response;
-        })
-        .catch(function () {
-          return cached;
-        });
-
-      return cached || network;
-    })
-  );
+  event.respondWith(respond(request));
 });
+
+async function respond(request) {
+  const cache = await caches.open(CACHE_NAME);
+
+  // Die Shell liegt vollständig im Cache – normalerweise endet es hier.
+  const cached = await cache.match(request, { ignoreSearch: true });
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response && response.ok && response.type === 'basic') {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    // Offline und nichts im Cache: bei Seitenaufrufen die Shell ausliefern.
+    if (request.mode === 'navigate') {
+      const shell = await cache.match('./index.html');
+      if (shell) return shell;
+    }
+    return Response.error();
+  }
+}
