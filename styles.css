@@ -307,7 +307,12 @@ ol {
   outline-offset: 1px;
 }
 
+/* Genau so hoch wie die Schaltfläche, die es ersetzt: Das Zeitfeld bringt in
+   Chromium eine eigene, größere Grundhöhe mit. Ohne Angleich wächst die Zeile
+   beim Aufklappen um vier Pixel, und alles darin – Uhrzeiten wie Linie –
+   rutscht nach unten. box-sizing: border-box rechnet den Rahmen mit ein. */
 .anchor__input {
+  height: calc(1.5em + 0.375rem);
   font: inherit;
   font-size: 1.0625rem;
   font-weight: 600;
@@ -345,6 +350,12 @@ ol {
   gap: 0.75rem;
   align-self: flex-end;
   margin-bottom: 0.125rem;
+  /* Schriftgröße der Dauer, hier gesetzt, damit sich die Mindesthöhe darauf
+     beziehen kann: eine Zeile hoch, auch wenn die Dauer beim Bearbeiten
+     weicht. Sonst schrumpfte die Gruppe auf die Linienstärke zusammen und
+     die Linie rutschte nach unten. */
+  font-size: 0.8125rem;
+  min-height: 1.5em;
 }
 
 .anchor__rule {
@@ -356,7 +367,6 @@ ol {
 /* Zurückhaltender als die Uhrzeiten links und rechts – die sind die
    Bedienelemente, das hier ist nur ihr Ergebnis. */
 .anchor__total {
-  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
