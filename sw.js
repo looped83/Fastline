@@ -10,7 +10,7 @@
    die neue Fassung, lädt die Shell frisch und wirft den alten Cache weg.
    ========================================================================== */
 
-const CACHE_NAME = 'intervallfasten-v17';
+const CACHE_NAME = 'intervallfasten-v18';
 
 const APP_SHELL = [
   './',

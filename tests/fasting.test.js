@@ -231,8 +231,32 @@ test('Langes Fenster (20:4) nutzt auch die Phasen jenseits von 18 Stunden', func
   );
   assert.strictEqual(long.fastMinutes, 20 * 60);
   const last = long.phases[long.phases.length - 1];
-  assert.strictEqual(last.title, 'Verlängertes Fasten');
+  assert.strictEqual(last.title, 'Wachstumshormon steigt');
   assert.strictEqual(last.to, 20);
+});
+
+test('Sehr langes Fenster erreicht die letzte Phase', function () {
+  // 23:59 ist das längste Fenster, das sich einstellen lässt – identische
+  // Zeiten lehnt die Prüfung ab.
+  const max = Fasting.resolveConfig(
+    Object.assign({}, CONFIG, { fastStart: '12:00', fastEnd: '11:59' })
+  );
+  const last = max.phases[max.phases.length - 1];
+  assert.strictEqual(last.title, 'Zuckerspeicher erschöpft');
+  assert.ok(Math.abs(last.to - 23.9833) < 0.001, 'auf die Fensterlänge gekürzt');
+});
+
+test('Auch das längste Fenster bleibt in der Umstellungsnacht in seiner Phase', function () {
+  // 25.10.2026: Die Nacht ist eine Stunde länger, das Fenster wächst auf
+  // knapp 25 Stunden. Endete die Liste bei 24, liefe die Anzeige heraus.
+  const max = Fasting.resolveConfig(
+    Object.assign({}, CONFIG, { fastStart: '12:00', fastEnd: '11:59' })
+  );
+  const state = Fasting.computeState(at('2026-10-25 11:30'), max);
+  const last = state.phases[state.phases.length - 1];
+  assert.ok(state.fastTotalMs / Fasting.HOUR > 24, 'Fenster überschreitet 24 Stunden');
+  assert.ok(state.elapsedMs / Fasting.HOUR <= last.to,
+            'Gefastete Zeit liegt außerhalb der letzten Phase');
 });
 
 /* ---- Einstellungen ------------------------------------------------------ */

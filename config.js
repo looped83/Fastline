@@ -27,10 +27,10 @@ const FASTING_CONFIG = {
   /* ---- Fastenphasen ------------------------------------------------------
      "from"/"to" sind Stunden seit Fastenbeginn; die Übergänge sind fließend.
 
-     Die Liste deckt bis zu 24 Stunden ab und wird automatisch auf die
-     eingestellte Fastendauer gekürzt. Ein 17-Stunden-Fasten endet dadurch
-     mitten in der Phase "Längere Fastenphase", ein 14-Stunden-Fasten in
-     "Zelluläre Reinigung".
+     Die Liste deckt jedes einstellbare Fenster ab – das längste mögliche ist
+     23:59 – und wird automatisch auf die eingestellte Fastendauer gekürzt.
+     Ein 17-Stunden-Fasten endet dadurch mitten in der Phase "Längere
+     Fastenphase", ein 14-Stunden-Fasten in "Zelluläre Reinigung".
      ---------------------------------------------------------------------- */
   phases: [
     {
@@ -45,14 +45,18 @@ const FASTING_CONFIG = {
       to: 5,
       title: 'Übergang in den Fastenstoffwechsel',
       description: 'Die Verdauung klingt ab, Blutzucker und Insulin sinken.',
-      detail: 'Die Verdauung klingt ab. Blutzucker und Insulin sinken, der Stoffwechsel stellt um.'
+      detail: 'Die Verdauung klingt ab. Blutzucker und Insulin sinken, der Stoffwechsel ' +
+              'stellt um. Hunger meldet sich jetzt oft entlang deiner gewohnten ' +
+              'Essenszeiten – er kommt in Wellen und geht wieder vorbei.'
     },
     {
       from: 5,
       to: 8,
       title: 'Zuckerspeicher werden genutzt',
       description: 'Die Energie kommt aus dem Glykogen in Leber und Muskulatur.',
-      detail: 'Deine Energie kommt jetzt aus den Zuckerspeichern in Leber und Muskulatur.'
+      detail: 'Deine Energie kommt jetzt aus den Zuckerspeichern in Leber und Muskulatur. ' +
+              'Meldet sich Hunger, ist das meist Gewohnheit – die Welle flaut nach ' +
+              'einigen Minuten von selbst ab.'
     },
     {
       from: 8,
@@ -66,7 +70,8 @@ const FASTING_CONFIG = {
       to: 12,
       title: 'Ketonkörper nehmen zu',
       description: 'Aus Fettsäuren entstehen Ketonkörper als alternativer Brennstoff.',
-      detail: 'Aus Fettsäuren entstehen Ketonkörper – ein alternativer Brennstoff fürs Gehirn.'
+      detail: 'Aus Fettsäuren entstehen Ketonkörper – ein alternativer Brennstoff fürs ' +
+              'Gehirn. Den Zucker, den es weiterhin braucht, stellt deine Leber selbst her.'
     },
     {
       from: 12,
@@ -91,10 +96,22 @@ const FASTING_CONFIG = {
     },
     {
       from: 18,
-      to: 24,
-      title: 'Verlängertes Fasten',
-      description: 'Ein deutlich längeres Fenster. Ausreichend trinken.',
-      detail: 'Ein deutlich längeres Fenster. Achte auf ausreichend Flüssigkeit.'
+      to: 20,
+      title: 'Wachstumshormon steigt',
+      description: 'Der Körper schützt die Muskulatur, die Ketose vertieft sich.',
+      detail: 'Dein Körper schüttet vermehrt Wachstumshormon aus – das schützt die ' +
+              'Muskulatur, während die Ketose sich vertieft.'
+    },
+    {
+      from: 20,
+      // Bis 25 statt 24: Ein Fenster kann in der Nacht der Zeitumstellung eine
+      // Stunde länger ausfallen. Auf die tatsächliche Länge wird ohnehin
+      // gekürzt, der höhere Wert kostet also nichts und lässt keine Lücke.
+      to: 25,
+      title: 'Zuckerspeicher erschöpft',
+      description: 'Die Leber stellt den nötigen Zucker selbst her. Ausreichend trinken.',
+      detail: 'Deine Zuckerspeicher sind weitgehend leer; die Leber stellt den ' +
+              'verbleibenden Bedarf selbst her. Achte auf ausreichend Flüssigkeit.'
     }
   ]
 };
