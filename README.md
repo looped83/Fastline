@@ -65,6 +65,10 @@ farbiger Lichtschein. **Verwendet wird durchgehend die dunkle Variante** – auf
 dem Homescreen, im Manifest und als Favicon im Browser-Tab, unabhängig vom
 Systemdesign.
 
+Die dunkle Kachel ist bewusst fast flach und neutral gehalten (#232326 nach
+#1A1A1D, ohne Lichtschein und ohne Kachelglanz), damit sie sich zwischen
+iOS-Systemicons einreiht. Die Plastizität kommt allein vom Ring.
+
 ```
 verwendet                          Alternative (hell)
 icons/icon-512-dark.png            icons/icon-512.png
