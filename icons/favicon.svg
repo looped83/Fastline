@@ -1,18 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Intervallfasten">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#121418"/>
-      <stop offset="100%" stop-color="#08090B"/>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FCFDFF"/>
+      <stop offset="100%" stop-color="#E2E9F4"/>
     </linearGradient>
-    <linearGradient id="arc" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#4C6FFF"/>
-      <stop offset="100%" stop-color="#21C7B6"/>
+    <!-- userSpaceOnUse: bleibt senkrecht, unabhängig von Transformationen -->
+    <linearGradient id="arc" gradientUnits="userSpaceOnUse" x1="0" y1="14" x2="0" y2="50">
+      <stop offset="0%" stop-color="#2C5AF5"/>
+      <stop offset="100%" stop-color="#00B6AC"/>
     </linearGradient>
+    <linearGradient id="rim" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.5"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.1"/>
+    </filter>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <g transform="rotate(-90 32 32)" fill="none" stroke-width="5.4" stroke-linecap="round">
-    <circle cx="32" cy="32" r="19" stroke="rgba(255,255,255,0.12)"/>
-    <circle cx="32" cy="32" r="19" stroke="url(#arc)"
-            stroke-dasharray="119.38" stroke-dashoffset="44.17"/>
+
+  <rect width="64" height="64" rx="14" fill="url(#tile)"/>
+
+  <g fill="none" stroke-linecap="round">
+    <!-- Schatten unter dem Glaskörper -->
+    <circle cx="32" cy="33.4" r="20" stroke="#9AA8BE" stroke-opacity="0.38"
+            stroke-width="6.8" filter="url(#soft)"/>
+    <!-- Glasröhre -->
+    <circle cx="32" cy="32" r="20" stroke="#FFFFFF" stroke-opacity="0.72" stroke-width="6.8"/>
+    <!-- Farbfüllung: Kreisbahn ab 12 Uhr im Uhrzeigersinn, 63 % gefüllt -->
+    <path d="M32 12 A20 20 0 0 1 32 52 A20 20 0 0 1 32 12"
+          stroke="url(#arc)" stroke-width="6.8"
+          stroke-dasharray="125.66" stroke-dashoffset="46.5"/>
+    <!-- Kantenlicht außen und innen -->
+    <circle cx="32" cy="32" r="23.1" stroke="url(#rim)" stroke-width="0.9"/>
+    <circle cx="32" cy="32" r="16.9" stroke="url(#rim)" stroke-width="0.8"/>
   </g>
 </svg>

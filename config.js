@@ -31,9 +31,7 @@ const FASTING_CONFIG = {
   tickIntervalMs: 1000,
 
   /* ---- Fastenphasen ------------------------------------------------------
-     "from"/"to" sind Stunden seit Fastenbeginn. Die Angaben sind eine grobe
-     Orientierung und keine exakten biologischen Schwellenwerte – der Übergang
-     zwischen den Phasen ist fließend und individuell verschieden.
+     "from"/"to" sind Stunden seit Fastenbeginn; die Übergänge sind fließend.
 
      Die Liste deckt bis zu 24 Stunden ab und wird automatisch auf die
      eingestellte Fastendauer gekürzt. Ein 17-Stunden-Fasten endet dadurch
@@ -45,82 +43,64 @@ const FASTING_CONFIG = {
       from: 0,
       to: 3,
       title: 'Verdauungsphase',
-      description:
-        'Der Körper verarbeitet die letzte Mahlzeit. Blutzucker und Insulin sind typischerweise noch erhöht.',
-      detail:
-        'Dein Körper ist noch mit der letzten Mahlzeit beschäftigt und nutzt vor allem die daraus verfügbare Energie.'
+      description: 'Der Körper verarbeitet die letzte Mahlzeit.',
+      detail: 'Dein Körper verarbeitet die letzte Mahlzeit und nutzt deren Energie.'
     },
     {
       from: 3,
       to: 5,
       title: 'Übergang in den Fastenstoffwechsel',
-      description:
-        'Die Verdauung klingt ab, Blutzucker und Insulinspiegel sinken typischerweise wieder.',
-      detail:
-        'Die Verdauung klingt ab. Blutzucker und Insulinspiegel sinken typischerweise – dein Stoffwechsel stellt sich langsam um.'
+      description: 'Die Verdauung klingt ab, Blutzucker und Insulin sinken.',
+      detail: 'Die Verdauung klingt ab. Blutzucker und Insulin sinken, der Stoffwechsel stellt um.'
     },
     {
       from: 5,
       to: 8,
       title: 'Zuckerspeicher werden genutzt',
-      description:
-        'Der Körper greift verstärkt auf die gespeicherte Energie in Leber und Muskulatur (Glykogen) zurück.',
-      detail:
-        'Dein Körper deckt seinen Bedarf jetzt vor allem aus den gespeicherten Zuckerreserven (Glykogen).'
+      description: 'Die Energie kommt aus dem Glykogen in Leber und Muskulatur.',
+      detail: 'Deine Energie kommt jetzt aus den Zuckerspeichern in Leber und Muskulatur.'
     },
     {
       from: 8,
       to: 10,
       title: 'Fettstoffwechsel nimmt zu',
-      description:
-        'Die Zuckerspeicher leeren sich allmählich, gespeichertes Fett wird zunehmend als Energiequelle genutzt.',
-      detail:
-        'Deine Zuckerspeicher leeren sich allmählich. Dein Körper befindet sich zunehmend in einem Zustand, in dem gespeicherte Energiereserven genutzt werden.'
+      description: 'Die Zuckerspeicher leeren sich, gespeichertes Fett wird zur Energiequelle.',
+      detail: 'Deine Zuckerspeicher leeren sich. Gespeichertes Fett wird zur Energiequelle.'
     },
     {
       from: 10,
       to: 12,
       title: 'Ketonkörper nehmen zu',
-      description:
-        'Aus Fettsäuren entstehen typischerweise vermehrt Ketonkörper als alternative Energiequelle. Wie ausgeprägt das ist, unterscheidet sich stark.',
-      detail:
-        'Aus Fettsäuren entstehen typischerweise vermehrt Ketonkörper. Manche Menschen nehmen das als klareren Kopf wahr – belegt ist das nicht bei allen.'
+      description: 'Aus Fettsäuren entstehen Ketonkörper als alternativer Brennstoff.',
+      detail: 'Aus Fettsäuren entstehen Ketonkörper – ein alternativer Brennstoff fürs Gehirn.'
     },
     {
       from: 12,
       to: 14,
       title: 'Zelluläre Reinigung (Autophagie)',
-      description:
-        'Autophagie beschreibt zelluläre Aufräumprozesse, bei denen Zellen beschädigte Bestandteile abbauen und verwerten. Fasten kann sie verstärken – ab wann und wie stark das beim Menschen geschieht, ist nicht abschließend geklärt.',
-      detail:
-        'Autophagie – die zelluläre Selbstreinigung – kann in dieser Phase zunehmen. Wie stark, lässt sich von außen nicht messen und ist beim Menschen noch nicht abschließend erforscht.'
+      description: 'Zellen bauen beschädigte Bestandteile ab und verwerten sie.',
+      detail: 'Deine Zellen bauen beschädigte Bestandteile ab und verwerten sie.'
     },
     {
       from: 14,
       to: 16,
       title: 'Autophagie und Ketose vertiefen sich',
-      description:
-        'Fettverbrennung und zelluläre Reinigungsprozesse können weiter zunehmen. Der Stoffwechsel arbeitet gleichmäßig aus den eigenen Reserven.',
-      detail:
-        'Fettverbrennung und zelluläre Reinigungsprozesse können weiter zunehmen. Dein Stoffwechsel arbeitet gleichmäßig aus den eigenen Reserven.'
+      description: 'Fettverbrennung und zelluläre Reinigung laufen weiter.',
+      detail: 'Fettverbrennung und zelluläre Reinigung laufen weiter.'
     },
     {
       from: 16,
       to: 18,
       title: 'Längere Fastenphase',
-      description:
-        'Der Stoffwechsel ist überwiegend auf Fett als Energiequelle eingestellt. Die letzte Etappe des Fastenfensters läuft.',
-      detail:
-        'Dein Stoffwechsel ist jetzt überwiegend auf Fett als Energiequelle eingestellt. Die letzte Etappe läuft.'
+      description: 'Der Stoffwechsel läuft überwiegend auf Fett.',
+      detail: 'Dein Stoffwechsel läuft überwiegend auf Fett. Die letzte Etappe.'
     },
     {
       from: 18,
       to: 24,
       title: 'Verlängertes Fasten',
-      description:
-        'Ein deutlich längeres Fastenfenster. Ketose und Autophagie können ausgeprägter sein. Ausreichend trinken und auf das eigene Körpergefühl achten.',
-      detail:
-        'Du bist in einem deutlich längeren Fastenfenster unterwegs. Achte besonders auf ausreichend Flüssigkeit und dein Körpergefühl.'
+      description: 'Ein deutlich längeres Fenster. Ausreichend trinken.',
+      detail: 'Ein deutlich längeres Fenster. Achte auf ausreichend Flüssigkeit.'
     }
   ]
 };

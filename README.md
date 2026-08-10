@@ -25,11 +25,13 @@ Light- und Dark-Mode folgen automatisch der Systemeinstellung.
 
 ## Fastenzeiten ändern
 
-**In der App:** oben rechts auf das Regler-Symbol tippen, Fastenbeginn und
-Fastenende setzen, speichern. Die Anzeige stellt sich sofort um, die Phasen
-werden auf die neue Dauer zugeschnitten. Gespeichert wird ausschließlich lokal
-im Browser (`localStorage`), „Zurücksetzen" stellt die Voreinstellung wieder
-her.
+**In der App:** unter dem Ring auf „Fastenbeginn 19:00" oder
+„Fastenende 12:00" tippen – die Uhrzeit wird direkt an Ort und Stelle zum
+Eingabefeld, darunter erscheinen Fastendauer, Essensfenster und
+„Zurücksetzen". Es gibt bewusst kein Overlay und keinen Speichern-Knopf:
+Änderungen greifen sofort. Geschlossen wird über „Fertig", Escape oder einen
+Tipp daneben. Gespeichert wird ausschließlich lokal im Browser
+(`localStorage`).
 
 **Als Voreinstellung im Code** – oben in [`config.js`](config.js):
 
@@ -55,6 +57,18 @@ einen echten Server (nicht `file://`):
 python3 -m http.server 8000
 # danach http://localhost:8000 öffnen
 ```
+
+## Icons
+
+Die Icons sind im hellen Glas-Look gehalten: heller Verlauf als Grundfläche,
+der Fortschrittsring als Glaskörper mit Kantenlicht, Reflex und weichem
+Schatten. Sie werden von [`tools/make-icons.py`](tools/make-icons.py)
+erzeugt – Farben, Ringgröße und Fortschritt stehen oben in der Datei.
+
+iOS wendet auf Homescreen-Icons von Web-Apps keine eigenen Glas-Effekte an
+(das gibt es nur für native Icons); der Look steckt deshalb im Bild selbst.
+`apple-touch-icon.png` ist bewusst randlos und ohne Transparenz gespeichert,
+weil iOS transparente Flächen sonst schwarz hinterlegt.
 
 ## Auf dem Homescreen installieren
 
@@ -91,19 +105,13 @@ node tests/fasting.test.js
 | `sw.js`                | Service Worker für den Offline-Betrieb                         |
 | `manifest.webmanifest` | Web App Manifest für die Installation                          |
 | `tests/`               | Tests der Fastenlogik                                          |
+| `icons/`               | App-Icons im hellen Glas-Look                                  |
+| `tools/make-icons.py`  | Erzeugt die Icons neu (`python3 tools/make-icons.py`, Pillow)  |
 
 ## Fastenphasen
 
-Die Timeline umfasst neun Phasen von 0 bis 24 Stunden – darunter die
-Autophagie ab etwa 12 Stunden – und wird automatisch auf das eingestellte
-Fastenfenster gekürzt. Bei 17 Stunden endet sie in „Längere Fastenphase",
-bei 14 Stunden in „Zelluläre Reinigung (Autophagie)".
-
-## Hinweis
-
-Die Angaben zu den Fastenphasen sind eine grobe Orientierung, keine exakten
-biologischen Schwellenwerte – die Übergänge sind fließend und individuell
-verschieden. Das gilt besonders für die Autophagie: dass Fasten zelluläre
-Aufräumprozesse verstärken kann, ist beschrieben, ab wann und wie stark das
-beim Menschen geschieht, ist nicht abschließend geklärt. Die App ist ein
-persönliches Hilfsmittel und ersetzt keine medizinische Beratung.
+Neun Phasen von 0 bis 24 Stunden – darunter die Autophagie ab 12 Stunden –
+automatisch gekürzt auf das eingestellte Fastenfenster. Bei 17 Stunden endet
+die Timeline in „Längere Fastenphase", bei 14 Stunden in „Zelluläre
+Reinigung (Autophagie)". Die Stundenangaben sind Orientierungswerte, die
+Übergänge fließend.
