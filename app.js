@@ -167,58 +167,21 @@
   }
 
   /* ---- Ring ---------------------------------------------------------------
-     Bogen und Punkt werden immer aus demselben Fortschrittswert gesetzt.
-     Würde man stattdessen cx/cy per CSS überblenden, liefe der Punkt beim
-     Aufbau auf einer Geraden quer durch den Ring statt auf der Kreisbahn.
-     ---------------------------------------------------------------------- */
-  const RING_INTRO_MS = 900;
-  let ringTarget = 0;
-  let ringAnimating = false;
-  let ringIntroDone = false;
+     Bogen und Punkt werden immer gemeinsam aus demselben Fortschrittswert
+     gesetzt – getrennt überblendete cx/cy würden den Punkt auf einer Geraden
+     quer durch den Ring schicken statt auf der Kreisbahn.
 
-  function setRing(progress) {
+     Bewusst ohne Aufbau-Animation: der Ring steht beim Laden sofort auf dem
+     richtigen Stand. Ein Punkt, der bei jedem Öffnen erst einmal um den Ring
+     wandert, lenkt von der eigentlichen Aussage ab.
+     ---------------------------------------------------------------------- */
+  function renderRing(progress) {
     setAttr(el.ringValue, 'stroke-dashoffset', (RING_LENGTH * (1 - progress)).toFixed(2));
 
     const angle = (progress * 360 - 90) * (Math.PI / 180);
     setAttr(el.ringHead, 'cx', (RING_CENTER + RING_RADIUS * Math.cos(angle)).toFixed(2));
     setAttr(el.ringHead, 'cy', (RING_CENTER + RING_RADIUS * Math.sin(angle)).toFixed(2));
     setAttr(el.ringHead, 'opacity', progress > 0.004 ? '1' : '0');
-  }
-
-  function renderRing(progress) {
-    ringTarget = progress;
-
-    // Läuft der Aufbau noch, genügt das neue Ziel – die Schleife holt es ab.
-    if (ringAnimating) return;
-
-    const reducedMotion =
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (ringIntroDone || reducedMotion || typeof requestAnimationFrame !== 'function') {
-      ringIntroDone = true;
-      setRing(ringTarget);
-      return;
-    }
-
-    // Einmaliger Aufbau: der Bogen wächst von 0 auf den aktuellen Stand,
-    // der Punkt bleibt dabei auf der Kreisbahn.
-    ringIntroDone = true;
-    ringAnimating = true;
-    const started = performance.now();
-
-    (function step(now) {
-      const t = Math.min(1, (now - started) / RING_INTRO_MS);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setRing(ringTarget * eased);
-
-      if (t < 1) {
-        requestAnimationFrame(step);
-      } else {
-        ringAnimating = false;
-        setRing(ringTarget);
-      }
-    })(started);
   }
 
   /* ---- Zustand rendern --------------------------------------------------- */

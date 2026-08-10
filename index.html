@@ -47,11 +47,15 @@
                 <stop id="ringGradientTo" offset="100%" stop-color="#21C7B6"></stop>
               </linearGradient>
             </defs>
-            <!-- Kreisbahn, die oben (12 Uhr) beginnt und im Uhrzeigersinn läuft -->
+            <!-- Kreisbahn, die oben (12 Uhr) beginnt und im Uhrzeigersinn läuft.
+                 Strichelung und Punkt starten leer bzw. unsichtbar: ohne diese
+                 Werte malt der Browser vor dem ersten Skriptlauf kurz den
+                 geschlossenen Ring. 540.354 = Umfang bei r = 86. -->
             <path class="ring__track" d="M100 14 A86 86 0 0 1 100 186 A86 86 0 0 1 100 14"></path>
             <path class="ring__value" id="ringValue"
-                  d="M100 14 A86 86 0 0 1 100 186 A86 86 0 0 1 100 14"></path>
-            <circle class="ring__head" id="ringHead" cx="100" cy="14" r="6.5"></circle>
+                  d="M100 14 A86 86 0 0 1 100 186 A86 86 0 0 1 100 14"
+                  stroke-dasharray="540.354" stroke-dashoffset="540.354"></path>
+            <circle class="ring__head" id="ringHead" cx="100" cy="14" r="6.5" opacity="0"></circle>
           </svg>
 
           <div class="ring__center">
