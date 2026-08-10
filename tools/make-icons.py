@@ -41,15 +41,18 @@ THEMES = {
         "plate": 28,                # Glanz über der gesamten Kachel
     },
     "dark": {
+        # Hintergrund bewusst fast flach und neutral wie bei iOS-Systemicons –
+        # kein Lichtschein, kein Kachelglanz. Die Plastizität kommt allein vom
+        # Ring.
         "suffix": "-dark",
-        "bg_top": (40, 45, 55),
-        "bg_bottom": (17, 19, 24),
+        "bg_top": (36, 36, 39),
+        "bg_bottom": (25, 25, 28),
         "from": (104, 134, 255),
         "to": (46, 222, 203),
-        "corner_glow": 34,
+        "corner_glow": 0,
         "shadow_rgb": (0, 0, 0),
         "shadow_alpha": 0.55,
-        "halo": 0.46,
+        "halo": 0.30,
         "tube": 0.13,
         "tube_rgb": (255, 255, 255),
         "groove_rgb": (0, 0, 0),
@@ -59,7 +62,7 @@ THEMES = {
         "rim_soft": 0.18,
         "sheen": 130,
         "sheen_damp": 0.62,
-        "plate": 16,
+        "plate": 0,
     },
 }
 
