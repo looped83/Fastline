@@ -96,16 +96,8 @@ node tests/fasting.test.js
 
 ## Fastenphasen
 
-Die Timeline umfasst neun Phasen von 0 bis 24 Stunden – darunter die
-Autophagie ab etwa 12 Stunden – und wird automatisch auf das eingestellte
-Fastenfenster gekürzt. Bei 17 Stunden endet sie in „Längere Fastenphase",
-bei 14 Stunden in „Zelluläre Reinigung (Autophagie)".
-
-## Hinweis
-
-Die Angaben zu den Fastenphasen sind eine grobe Orientierung, keine exakten
-biologischen Schwellenwerte – die Übergänge sind fließend und individuell
-verschieden. Das gilt besonders für die Autophagie: dass Fasten zelluläre
-Aufräumprozesse verstärken kann, ist beschrieben, ab wann und wie stark das
-beim Menschen geschieht, ist nicht abschließend geklärt. Die App ist ein
-persönliches Hilfsmittel und ersetzt keine medizinische Beratung.
+Neun Phasen von 0 bis 24 Stunden – darunter die Autophagie ab 12 Stunden –
+automatisch gekürzt auf das eingestellte Fastenfenster. Bei 17 Stunden endet
+die Timeline in „Längere Fastenphase", bei 14 Stunden in „Zelluläre
+Reinigung (Autophagie)". Die Stundenangaben sind Orientierungswerte, die
+Übergänge fließend.

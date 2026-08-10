@@ -107,24 +107,10 @@ ol {
 .app {
   min-height: 100svh;
   padding:
-    calc(env(safe-area-inset-top, 0px) + 1.5rem)
+    calc(env(safe-area-inset-top, 0px) + 3rem)
     calc(env(safe-area-inset-right, 0px) + 1.375rem)
     calc(env(safe-area-inset-bottom, 0px) + 3rem)
     calc(env(safe-area-inset-left, 0px) + 1.375rem);
-}
-
-/* ---- Kopfzeile ---------------------------------------------------------- */
-.topbar {
-  max-width: var(--content-width);
-  margin: 0 auto 1.75rem;
-}
-
-.wordmark {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: var(--text-faint);
 }
 
 /* ---- Layout ------------------------------------------------------------- */
@@ -683,15 +669,6 @@ ol {
   color: var(--text-muted);
 }
 
-/* ---- Hinweis ------------------------------------------------------------ */
-.disclaimer {
-  margin-top: 1.25rem;
-  padding: 0 0.25rem;
-  font-size: 0.75rem;
-  line-height: 1.55;
-  color: var(--text-faint);
-}
-
 /* ---- Desktop ------------------------------------------------------------ */
 @media (min-width: 60rem) {
   :root {
@@ -700,12 +677,8 @@ ol {
   }
 
   .app {
-    padding-top: 3.5rem;
+    padding-top: 4rem;
     padding-bottom: 4rem;
-  }
-
-  .topbar {
-    margin-bottom: 2.5rem;
   }
 
   .layout {
@@ -717,7 +690,7 @@ ol {
 
   .hero {
     position: sticky;
-    top: 3.5rem;
+    top: 4rem;
     max-width: 23rem;
     margin-inline: auto;
   }
