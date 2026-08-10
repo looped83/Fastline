@@ -137,7 +137,13 @@ ol {
   line-height: 1.24;
   letter-spacing: -0.021em;
   text-wrap: balance;
-  min-height: 1.24em;
+  /* zwei Zeilen, damit beim Wechsel des Zustands nichts springt */
+  min-height: 2.48em;
+}
+
+.hero__status-lead,
+.hero__status-value {
+  display: block;
 }
 
 .hero__meta {

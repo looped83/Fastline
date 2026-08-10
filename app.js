@@ -18,7 +18,8 @@
   /* ---- DOM-Referenzen ---------------------------------------------------- */
   const el = {
     app: document.getElementById('app'),
-    statusHeadline: document.getElementById('statusHeadline'),
+    statusLead: document.getElementById('statusLead'),
+    statusValue: document.getElementById('statusValue'),
     clock: document.getElementById('clock'),
     modeLabel: document.getElementById('modeLabel'),
 
@@ -207,7 +208,8 @@
 
   function renderFasting(state) {
     /* Kopf */
-    setText(el.statusHeadline, 'Du fastest seit ' + words(state.elapsedMs, 'floor'));
+    setText(el.statusLead, 'Du fastest seit');
+    setText(el.statusValue, words(state.elapsedMs, 'floor'));
     setText(el.modeLabel, 'Fasten bis ' + state.fastEndLabel + ' Uhr');
 
     /* Ring */
@@ -243,7 +245,8 @@
     } else {
       setText(el.nowMeta, '');
     }
-    setText(el.nowLead, 'Du fastest seit ' + words(state.elapsedMs, 'floor') + '.');
+    // Die Fastendauer steht bereits in der Überschrift – hier keine Wiederholung.
+    el.nowLead.hidden = true;
     setText(el.nowBody, phase ? phase.detail : '');
 
     /* Als Nächstes */
@@ -275,7 +278,8 @@
     const remaining = state.eatingRemainingMs;
 
     /* Kopf */
-    setText(el.statusHeadline, 'Dein Essensfenster ist geöffnet');
+    setText(el.statusLead, 'Dein Essensfenster');
+    setText(el.statusValue, 'ist geöffnet');
     setText(el.modeLabel, 'Essen bis ' + state.nextFastStartLabel + ' Uhr');
 
     /* Ring: zählt auf den nächsten Fastenbeginn zu */
@@ -300,6 +304,7 @@
       state.fastEndLabel + '–' + state.nextFastStartLabel + ' Uhr · ' +
         words(state.eatingTotalMs, 'floor')
     );
+    el.nowLead.hidden = false;
     setText(el.nowLead, 'Geöffnet seit ' + words(state.eatingElapsedMs, 'floor') + '.');
     setText(
       el.nowBody,
