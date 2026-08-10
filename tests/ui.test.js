@@ -222,6 +222,35 @@ const ringGeometry = page => page.evaluate(() => {
   });
 
   /* ---- Zeiteinstellung --------------------------------------------------- */
+  await test('Beim Aufklappen bleibt die Linie stehen und wird durchgehend', async function () {
+    const messen = () => page.evaluate(() => {
+      const stuecke = [...document.querySelectorAll('.anchor__rule')].map(e => e.getBoundingClientRect());
+      const zeile = document.querySelector('.anchors__row').getBoundingClientRect();
+      return {
+        linie: stuecke[0].top + stuecke[0].height / 2,
+        luecke: stuecke[1].left - stuecke[0].right,
+        zeilenhoehe: zeile.height
+      };
+    });
+
+    const zu = await messen();
+    await page.click('#editStart');
+    await page.waitForTimeout(200);
+    const auf = await messen();
+
+    // Das Zeitfeld ist von Haus aus höher als die Schaltfläche, die es
+    // ersetzt. Ohne Angleich wüchse die Zeile und alles darin rutschte mit.
+    ok(Math.abs(auf.zeilenhoehe - zu.zeilenhoehe) < 1,
+       'Zeile ändert ihre Höhe um ' + Math.abs(auf.zeilenhoehe - zu.zeilenhoehe).toFixed(1) + ' px');
+    ok(Math.abs(auf.linie - zu.linie) < 1,
+       'Linie wandert um ' + Math.abs(auf.linie - zu.linie).toFixed(1) + ' px');
+    ok(zu.luecke > 8, 'Ohne Bearbeiten gehört die Dauer zwischen die beiden Linienstücke');
+    ok(auf.luecke < 1, 'Beim Bearbeiten bleibt eine Lücke von ' + auf.luecke.toFixed(1) + ' px');
+
+    await page.click('#settingsDone');
+    await page.waitForTimeout(150);
+  });
+
   await test('Antippen der Uhrzeit tauscht Schaltfläche gegen Eingabefeld', async function () {
     await page.click('#editStart');
     await page.waitForTimeout(150);
