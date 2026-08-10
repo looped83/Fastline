@@ -54,7 +54,11 @@ und liefert danach ausschließlich daraus aus – im laufenden Betrieb entsteht
 kein Netzverkehr. Nach dem Ändern von Dateien deshalb `CACHE_NAME` in
 [`sw.js`](sw.js) hochzählen: der Browser prüft `sw.js` bei jedem Aufruf,
 installiert die neue Fassung, lädt die Shell frisch und wirft den alten Cache
-weg. Die neue Fassung erscheint dann beim nächsten Öffnen.
+weg. Sobald sie übernimmt, lädt die geöffnete Seite sich einmal selbst neu –
+außer während einer laufenden Zeiteingabe.
+
+Im Cache liegen nur die tatsächlich eingebundenen Dateien. Wer auf die hellen
+Icons umstellt, trägt sie in `APP_SHELL` nach, sonst fehlen sie offline.
 
 ## Lokal starten
 
@@ -120,16 +124,30 @@ relativ, die App funktioniert daher auch in einem Unterverzeichnis.
 
 ## Tests
 
-Die Zeit- und Phasenlogik ist ohne Browser prüfbar:
+Die Zeit- und Phasenlogik läuft ohne jede Abhängigkeit:
 
 ```bash
-node tests/fasting.test.js
+npm test          # oder: node tests/fasting.test.js
 ```
 
 Enthalten sind neben Einzelfällen zwei Durchläufe über längere Zeiträume: ein
 Jahr in Sieben-Minuten-Schritten über sechs verschiedene Fastenfenster sowie
 die Tage der Zeitumstellung. Geprüft wird dabei, dass sich Fortschritt, Dauer
 und Phase nie widersprechen.
+
+Dazu kommen Oberflächentests im echten Browser – sie decken ab, was reine
+Logiktests nicht sehen können: Lage des Fortschrittspunkts, ruhiger Aufbau
+ohne wandernden Punkt, die Zeiteinstellung inklusive Ablehnung ungültiger
+Eingaben, der Wechsel um 12:00 Uhr und der Offline-Betrieb.
+
+```bash
+npm install                      # einmalig
+npx playwright install chromium  # einmalig
+npm run test:ui
+```
+
+Liegt Chromium außerhalb des Playwright-Verzeichnisses, hilft
+`CHROMIUM_PATH=/pfad/zu/chromium npm run test:ui`.
 
 ## Aufbau
 

@@ -10,17 +10,21 @@
   --bg: #F5F5F3;
   --surface: #FFFFFF;
   --text: #101114;
-  --text-muted: #6A6F77;
-  --text-faint: #9AA0A8;
+  --text-muted: #5B6068;
+  --text-faint: #6A6F77;
   --line: rgba(16, 17, 20, 0.09);
   --track: rgba(16, 17, 20, 0.08);
   --card-border: rgba(16, 17, 20, 0.05);
   --card-shadow: 0 1px 2px rgba(16, 17, 20, 0.04), 0 10px 30px -12px rgba(16, 17, 20, 0.14);
 
-  /* Fastenfenster (Standard) */
+  /* Fastenfenster (Standard).
+     --accent färbt Flächen und Ränder, --accent-text ausschließlich Schrift.
+     Getrennt, weil die leuchtenden Verlaufsfarben als Text auf Weiß zu
+     kontrastarm wären. */
   --accent-from: #4C6FFF;
   --accent-to: #21C7B6;
   --accent: #3E6EF0;
+  --accent-text: #2449C4;
   --accent-soft: rgba(62, 110, 240, 0.09);
 
   --radius-card: 20px;
@@ -35,6 +39,7 @@
   --accent-from: #F5A524;
   --accent-to: #EE7B4C;
   --accent: #D9832A;
+  --accent-text: #8F5100;
   --accent-soft: rgba(217, 131, 42, 0.11);
 }
 
@@ -44,7 +49,7 @@
     --surface: #16181C;
     --text: #F2F3F5;
     --text-muted: #9BA1AA;
-    --text-faint: #71777F;
+    --text-faint: #868C95;
     --line: rgba(255, 255, 255, 0.09);
     --track: rgba(255, 255, 255, 0.09);
     --card-border: rgba(255, 255, 255, 0.06);
@@ -53,6 +58,7 @@
     --accent-from: #6C8CFF;
     --accent-to: #35DCC8;
     --accent: #8AA3FF;
+    --accent-text: #8AA3FF;
     --accent-soft: rgba(108, 140, 255, 0.13);
   }
 
@@ -60,6 +66,7 @@
     --accent-from: #FFBE4D;
     --accent-to: #FF8F63;
     --accent: #FFC069;
+    --accent-text: #FFC069;
     --accent-soft: rgba(255, 190, 77, 0.12);
   }
 }
@@ -95,6 +102,19 @@ h1, h2, p, ol, li {
 
 ol {
   list-style: none;
+}
+
+/* Nur für Screenreader: sichtbar ausgeblendet, aber vorlesbar. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Muss die display-Regeln der Klassen überstimmen (z. B. .anchor__time). */
@@ -313,14 +333,14 @@ ol {
   stroke-width: 1.9;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 0.38;
+  opacity: 0.55;
   transition: opacity 160ms ease;
 }
 
 .anchor__time:hover,
 .anchor__time:focus-visible {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .anchor__time:hover .anchor__icon,
@@ -417,7 +437,7 @@ ol {
 }
 
 .link-button--accent {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .link-button:focus-visible {
@@ -460,7 +480,7 @@ ol {
 
 .card__eyebrow--badge {
   display: inline-block;
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-soft);
   border-radius: 999px;
   padding: 0.25rem 0.5rem;
@@ -479,7 +499,7 @@ ol {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: var(--accent);
+  color: var(--accent-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -501,7 +521,9 @@ ol {
 .card--goal {
   background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
   border-color: transparent;
-  color: #FFFFFF;
+  /* Dunkle Schrift auf dem leuchtenden Verlauf: Weiß käme auf dem türkisen
+     bzw. gelben Ende nur auf 2:1 und wäre praktisch nicht lesbar. */
+  color: #0A0B0D;
   box-shadow: none;
 }
 
@@ -510,17 +532,8 @@ ol {
 }
 
 .card--goal .card__body {
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(10, 11, 13, 0.78);
   margin-top: 0.3125rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .card--goal {
-    color: #0A0B0D;
-  }
-  .card--goal .card__body {
-    color: rgba(10, 11, 13, 0.72);
-  }
 }
 
 /* ---- Phasen-Timeline ---------------------------------------------------- */
@@ -599,7 +612,6 @@ ol {
 .phase__clock {
   font-weight: 500;
   color: var(--text-faint);
-  opacity: 0.85;
 }
 
 .phase__clock::before {
@@ -660,7 +672,13 @@ ol {
 }
 
 .phase--current .phase__range {
-  color: var(--accent);
+  color: var(--accent-text);
+}
+
+/* Auf der getönten Fläche der aktuellen Phase reicht die zurückhaltende
+   Textfarbe nicht mehr für einen ausreichenden Kontrast. */
+.phase--current .phase__clock {
+  color: var(--text-muted);
 }
 
 .phase--current .phase__name {

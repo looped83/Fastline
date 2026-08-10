@@ -1,0 +1,16 @@
+{
+  "name": "intervallfasten",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimalistische PWA für das tägliche Intervallfasten",
+  "license": "MIT",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node tests/fasting.test.js",
+    "test:ui": "node tests/ui.test.js",
+    "icons": "python3 tools/make-icons.py"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}

@@ -47,6 +47,7 @@
     nextBody: document.getElementById('nextBody'),
 
     phaseList: document.getElementById('phaseList'),
+    modeAnnounce: document.getElementById('modeAnnounce'),
 
     anchorsBlock: document.getElementById('anchorsBlock'),
     anchorsEditor: document.getElementById('anchorsEditor'),
@@ -205,7 +206,13 @@
   function render(now) {
     const state = Fasting.computeState(now, config);
 
-    if (el.app.dataset.mode !== state.mode) el.app.dataset.mode = state.mode;
+    if (el.app.dataset.mode !== state.mode) {
+      el.app.dataset.mode = state.mode;
+      setText(
+        el.modeAnnounce,
+        state.isFasting ? 'Fastenfenster läuft.' : 'Essensfenster ist geöffnet.'
+      );
+    }
 
     setText(el.clock, state.clock + ' Uhr');
     renderRing(state.progress);
@@ -512,8 +519,25 @@
 
   tick();
 
-  /* ---- Service Worker ----------------------------------------------------- */
+  /* ---- Service Worker -----------------------------------------------------
+     Die App wird aus dem Cache ausgeliefert. Übernimmt eine neue Fassung,
+     wird einmal neu geladen, damit die Änderung sofort sichtbar ist – sonst
+     erschiene sie erst beim übernächsten Öffnen.
+     ---------------------------------------------------------------------- */
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    // Beim allerersten Besuch gibt es noch keinen Controller. Der Wechsel von
+    // "keiner" auf "einer" ist keine Aktualisierung und darf nicht neu laden.
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let reloading = false;
+
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!hadController || reloading) return;
+      // Nicht mitten in einer Eingabe neu laden.
+      if (editing) return;
+      reloading = true;
+      window.location.reload();
+    });
+
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('./sw.js').catch(function () {
         /* Offline-Betrieb ist optional – Fehler bewusst ignorieren. */

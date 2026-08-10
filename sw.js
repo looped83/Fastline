@@ -10,7 +10,7 @@
    die neue Fassung, lädt die Shell frisch und wirft den alten Cache weg.
    ========================================================================== */
 
-const CACHE_NAME = 'intervallfasten-v12';
+const CACHE_NAME = 'intervallfasten-v14';
 
 const APP_SHELL = [
   './',
@@ -22,10 +22,9 @@ const APP_SHELL = [
   './app.js',
   './manifest.webmanifest',
   './icons/favicon.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png',
+  // Nur die tatsächlich eingebundenen Icons. Die hellen Varianten liegen im
+  // Repository als Alternative bereit – wer auf sie umstellt, trägt sie hier
+  // nach, sonst fehlen sie offline.
   './icons/icon-192-dark.png',
   './icons/icon-512-dark.png',
   './icons/icon-maskable-512-dark.png',
