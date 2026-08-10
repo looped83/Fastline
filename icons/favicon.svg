@@ -1,13 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Intervallfasten">
+  <!-- Hell und dunkel in einer Datei: Browser werten prefers-color-scheme
+       auch in SVG-Favicons aus, dadurch passt sich das Tab-Symbol an. -->
+  <style>
+    :root {
+      --tile-top: #FCFDFF;
+      --tile-bottom: #E2E9F4;
+      --arc-from: #2C5AF5;
+      --arc-to: #00B6AC;
+      --tube: #FFFFFF;
+      --tube-opacity: 0.72;
+      --shadow: #9AA8BE;
+      --shadow-opacity: 0.38;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --tile-top: #282D37;
+        --tile-bottom: #111318;
+        --arc-from: #6886FF;
+        --arc-to: #2EDECB;
+        --tube: #FFFFFF;
+        --tube-opacity: 0.16;
+        --shadow: #000000;
+        --shadow-opacity: 0.55;
+      }
+    }
+    .tile-top    { stop-color: var(--tile-top); }
+    .tile-bottom { stop-color: var(--tile-bottom); }
+    .arc-from    { stop-color: var(--arc-from); }
+    .arc-to      { stop-color: var(--arc-to); }
+    .tube        { stroke: var(--tube); stroke-opacity: var(--tube-opacity); }
+    .shadow      { stroke: var(--shadow); stroke-opacity: var(--shadow-opacity); }
+  </style>
+
   <defs>
     <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FCFDFF"/>
-      <stop offset="100%" stop-color="#E2E9F4"/>
+      <stop class="tile-top" offset="0%" stop-color="#FCFDFF"/>
+      <stop class="tile-bottom" offset="100%" stop-color="#E2E9F4"/>
     </linearGradient>
     <!-- userSpaceOnUse: bleibt senkrecht, unabhängig von Transformationen -->
     <linearGradient id="arc" gradientUnits="userSpaceOnUse" x1="0" y1="14" x2="0" y2="50">
-      <stop offset="0%" stop-color="#2C5AF5"/>
-      <stop offset="100%" stop-color="#00B6AC"/>
+      <stop class="arc-from" offset="0%" stop-color="#2C5AF5"/>
+      <stop class="arc-to" offset="100%" stop-color="#00B6AC"/>
     </linearGradient>
     <linearGradient id="rim" x1="0.15" y1="0" x2="0.85" y2="1">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
@@ -23,10 +56,9 @@
 
   <g fill="none" stroke-linecap="round">
     <!-- Schatten unter dem Glaskörper -->
-    <circle cx="32" cy="33.4" r="20" stroke="#9AA8BE" stroke-opacity="0.38"
-            stroke-width="6.8" filter="url(#soft)"/>
+    <circle class="shadow" cx="32" cy="33.4" r="20" stroke-width="6.8" filter="url(#soft)"/>
     <!-- Glasröhre -->
-    <circle cx="32" cy="32" r="20" stroke="#FFFFFF" stroke-opacity="0.72" stroke-width="6.8"/>
+    <circle class="tube" cx="32" cy="32" r="20" stroke-width="6.8"/>
     <!-- Farbfüllung: Kreisbahn ab 12 Uhr im Uhrzeigersinn, 63 % gefüllt -->
     <path d="M32 12 A20 20 0 0 1 32 52 A20 20 0 0 1 32 12"
           stroke="url(#arc)" stroke-width="6.8"
