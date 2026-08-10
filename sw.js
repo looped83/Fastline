@@ -4,7 +4,7 @@
    offline. Bei der Version unten hochzählen, wenn Dateien geändert wurden.
    ========================================================================== */
 
-const CACHE_NAME = 'intervallfasten-v10';
+const CACHE_NAME = 'intervallfasten-v11';
 
 const APP_SHELL = [
   './',

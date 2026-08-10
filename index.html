@@ -28,7 +28,11 @@
 
       <!-- ===================== Hauptanzeige ===================== -->
       <section class="hero" aria-labelledby="statusHeadline">
-        <h1 class="hero__status" id="statusHeadline" aria-live="polite">&nbsp;</h1>
+        <!-- Zwei feste Zeilen: Einleitung oben, Wert darunter -->
+        <h1 class="hero__status" id="statusHeadline" aria-live="polite">
+          <span class="hero__status-lead" id="statusLead">&nbsp;</span>
+          <span class="hero__status-value" id="statusValue"></span>
+        </h1>
         <p class="hero__meta">
           <span class="hero__clock" id="clock">--:--</span>
           <span class="hero__sep" aria-hidden="true"></span>
