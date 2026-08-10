@@ -190,17 +190,15 @@ ol {
   stroke: url(#ringGradient);
   stroke-width: 11;
   stroke-linecap: round;
-  transition: stroke-dashoffset 800ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .ring__head {
   fill: url(#ringGradient);
   stroke: var(--bg);
   stroke-width: 3.5;
-  transition:
-    cx 800ms cubic-bezier(0.22, 1, 0.36, 1),
-    cy 800ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 300ms ease;
+  /* Position kommt aus app.js – cx/cy dürfen nicht einzeln überblendet
+     werden, sonst schneidet der Punkt quer durch den Ring. */
+  transition: opacity 300ms ease;
 }
 
 #ringGradientFrom { stop-color: var(--accent-from); }
@@ -717,7 +715,6 @@ ol {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ring__value,
   .ring__head {
     transition: none;
   }
