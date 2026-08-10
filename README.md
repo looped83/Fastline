@@ -58,6 +58,18 @@ python3 -m http.server 8000
 # danach http://localhost:8000 öffnen
 ```
 
+## Icons
+
+Die Icons sind im hellen Glas-Look gehalten: heller Verlauf als Grundfläche,
+der Fortschrittsring als Glaskörper mit Kantenlicht, Reflex und weichem
+Schatten. Sie werden von [`tools/make-icons.py`](tools/make-icons.py)
+erzeugt – Farben, Ringgröße und Fortschritt stehen oben in der Datei.
+
+iOS wendet auf Homescreen-Icons von Web-Apps keine eigenen Glas-Effekte an
+(das gibt es nur für native Icons); der Look steckt deshalb im Bild selbst.
+`apple-touch-icon.png` ist bewusst randlos und ohne Transparenz gespeichert,
+weil iOS transparente Flächen sonst schwarz hinterlegt.
+
 ## Auf dem Homescreen installieren
 
 - **iOS/Safari:** Teilen → „Zum Home-Bildschirm“
@@ -93,6 +105,8 @@ node tests/fasting.test.js
 | `sw.js`                | Service Worker für den Offline-Betrieb                         |
 | `manifest.webmanifest` | Web App Manifest für die Installation                          |
 | `tests/`               | Tests der Fastenlogik                                          |
+| `icons/`               | App-Icons im hellen Glas-Look                                  |
+| `tools/make-icons.py`  | Erzeugt die Icons neu (`python3 tools/make-icons.py`, Pillow)  |
 
 ## Fastenphasen
 
