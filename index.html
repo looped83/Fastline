@@ -26,10 +26,15 @@
 
     <main class="layout">
 
+      <!-- Meldet nur den Wechsel zwischen Fasten und Essensfenster.
+           Läge die Live-Region auf der Überschrift, würde ein Screenreader
+           jede Minute die neue Dauer vorlesen. -->
+      <p class="visually-hidden" id="modeAnnounce" role="status" aria-live="polite"></p>
+
       <!-- ===================== Hauptanzeige ===================== -->
       <section class="hero" aria-labelledby="statusHeadline">
         <!-- Zwei feste Zeilen: Einleitung oben, Wert darunter -->
-        <h1 class="hero__status" id="statusHeadline" aria-live="polite">
+        <h1 class="hero__status" id="statusHeadline">
           <span class="hero__status-lead" id="statusLead">&nbsp;</span>
           <span class="hero__status-value" id="statusValue"></span>
         </h1>
